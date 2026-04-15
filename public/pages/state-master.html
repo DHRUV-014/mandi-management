@@ -1,0 +1,58 @@
+<div class="page-header">
+  <h2>State Codes</h2>
+  <p class="page-subtitle">Manage Indian state codes used for vehicle number lookup</p>
+</div>
+
+<div class="readonly-notice hidden" id="state-readonly-notice">
+  &#128274; You have read-only access. Contact an administrator to make changes.
+</div>
+
+<div class="card" id="state-form-card">
+  <div class="card-header">
+    <h3 id="state-form-title">Add New State Code</h3>
+  </div>
+  <form id="state-form" class="master-form">
+    <input type="hidden" id="state-edit-id" />
+    <div class="form-row">
+      <div class="form-group">
+        <label for="state-code">State Code <span class="required">*</span></label>
+        <input type="text" id="state-code" placeholder="e.g. DL" maxlength="2" required />
+      </div>
+      <div class="form-group">
+        <label for="state-name">State Name <span class="required">*</span></label>
+        <input type="text" id="state-name" placeholder="e.g. Delhi" required />
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" id="state-submit-btn">Save State</button>
+      <button type="button" class="btn btn-ghost" id="state-cancel-btn" style="display:none">Cancel Edit</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3>State Code List</h3>
+    <div class="card-header-actions">
+      <input type="text" id="state-search" class="search-input" placeholder="&#128269; Search by code or name…" autocomplete="off" />
+      <span class="badge" id="state-count">0 records</span>
+    </div>
+  </div>
+  <div class="table-wrapper">
+    <table class="data-table" id="state-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>State Code</th>
+          <th>State Name</th>
+          <th class="admin-only-th">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="state-tbody">
+        <tr class="empty-row">
+          <td colspan="4">No state codes added yet</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

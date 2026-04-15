@@ -1,0 +1,55 @@
+<div class="page-header">
+  <h2>Vehicle Type Master</h2>
+  <p class="page-subtitle">Manage vehicle types and their charges</p>
+</div>
+
+<div class="readonly-notice hidden" id="vehicle-readonly-notice">
+  &#128274; You have read-only access. Contact an administrator to make changes.
+</div>
+
+<div class="card" id="vehicle-form-card">
+  <div class="card-header">
+    <h3 id="vehicle-form-title">Add New Vehicle Type</h3>
+  </div>
+  <form id="vehicle-form" class="master-form">
+    <input type="hidden" id="vehicle-edit-id" />
+    <div class="form-row">
+      <div class="form-group">
+        <label for="vehicle-type-name">Vehicle Type <span class="required">*</span></label>
+        <input type="text" id="vehicle-type-name" placeholder="e.g. Truck" required />
+      </div>
+      <div class="form-group">
+        <label for="vehicle-type-charges">Charges (₹) <span class="required">*</span></label>
+        <input type="number" id="vehicle-type-charges" placeholder="e.g. 500" min="0" step="0.01" required />
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" id="vehicle-submit-btn">Save Vehicle Type</button>
+      <button type="button" class="btn btn-ghost" id="vehicle-cancel-btn" style="display:none">Cancel Edit</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3>Vehicle Type List</h3>
+    <span class="badge" id="vehicle-count">0 records</span>
+  </div>
+  <div class="table-wrapper">
+    <table class="data-table" id="vehicle-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Vehicle Type</th>
+          <th>Charges (₹)</th>
+          <th class="admin-only-th">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="vehicle-tbody">
+        <tr class="empty-row">
+          <td colspan="4">No vehicle types added yet</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

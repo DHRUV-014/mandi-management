@@ -1,0 +1,57 @@
+<div class="page-header">
+  <h2>User Management</h2>
+  <p class="page-subtitle">Manage system users and access levels</p>
+</div>
+
+<!-- Add User Form -->
+<div class="card">
+  <div class="card-header">
+    <h3>Add New User</h3>
+  </div>
+  <form id="user-add-form" class="master-form">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="new-username">Username <span class="required">*</span></label>
+        <input type="text" id="new-username" placeholder="e.g. john" autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label for="new-password">Password <span class="required">*</span></label>
+        <input type="password" id="new-password" placeholder="Min 6 characters" autocomplete="new-password" />
+      </div>
+      <div class="form-group">
+        <label for="new-level">Level <span class="required">*</span></label>
+        <select id="new-level">
+          <option value="user">User</option>
+          <option value="admin">Administrator</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Add User</button>
+    </div>
+  </form>
+</div>
+
+<!-- User List -->
+<div class="card">
+  <div class="card-header">
+    <h3>All Users</h3>
+    <span class="badge" id="user-count">0 users</span>
+  </div>
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Username</th>
+          <th style="width:110px">Level</th>
+          <th style="width:160px">Created</th>
+          <th style="width:120px">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="user-tbody">
+        <tr class="empty-row"><td colspan="5">No users found</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>

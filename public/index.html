@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mandi Management System</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- LOGIN PAGE -->
+  <div id="login-page" class="login-wrapper">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="logo-icon">M</div>
+        <h1>Mandi System</h1>
+        <p>Agricultural Market Management</p>
+      </div>
+      <form id="login-form" autocomplete="off">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" placeholder="Enter username" required autofocus />
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="Enter password" required />
+        </div>
+        <div id="login-error" class="alert alert-error hidden"></div>
+        <button type="submit" class="btn btn-primary btn-full" id="login-btn">
+          <span>Sign In</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="app" class="app-layout hidden">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">M</div>
+        <span class="sidebar-title">Mandi System</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <!-- Master Menu -->
+        <div class="nav-group">
+          <div class="nav-group-header" data-menu="master">
+            <span class="nav-icon">&#9776;</span>
+            <span>Master</span>
+            <span class="nav-chevron">&#8250;</span>
+          </div>
+          <div class="nav-group-items" id="menu-master">
+            <a href="#" class="nav-item" data-page="commodity-master">
+              <span class="nav-dot"></span> Commodity Master
+            </a>
+            <a href="#" class="nav-item" data-page="trader-master">
+              <span class="nav-dot"></span> Shop / Trader Master
+            </a>
+            <a href="#" class="nav-item" data-page="vehicle-type-master">
+              <span class="nav-dot"></span> Vehicle Type Master
+            </a>
+            <a href="#" class="nav-item" data-page="state-master">
+              <span class="nav-dot"></span> State Codes
+            </a>
+            <a href="#" class="nav-item hidden" data-page="user-management" id="nav-user-management">
+              <span class="nav-dot"></span> User Management
+            </a>
+          </div>
+        </div>
+
+        <!-- Entry Menu -->
+        <div class="nav-group">
+          <div class="nav-group-header" data-menu="entry">
+            <span class="nav-icon">&#9998;</span>
+            <span>Entry</span>
+            <span class="nav-chevron">&#8250;</span>
+          </div>
+          <div class="nav-group-items" id="menu-entry">
+            <a href="#" class="nav-item" data-page="gate-pass">
+              <span class="nav-dot"></span> Gate Pass Entry
+            </a>
+          </div>
+        </div>
+
+        <!-- Reports Menu -->
+        <div class="nav-group">
+          <div class="nav-group-header" data-menu="reports">
+            <span class="nav-icon">&#9998;</span>
+            <span>Reports</span>
+            <span class="nav-chevron">&#8250;</span>
+          </div>
+          <div class="nav-group-items" id="menu-reports">
+            <a href="#" class="nav-item" data-page="report-gatepass">
+              <span class="nav-dot"></span> Gate Pass Wise
+            </a>
+            <a href="#" class="nav-item" data-page="report-commodity">
+              <span class="nav-dot"></span> Commodity Wise
+            </a>
+            <a href="#" class="nav-item" data-page="report-arrival">
+              <span class="nav-dot"></span> Commodity State Wise
+            </a>
+            <a href="#" class="nav-item" data-page="report-cash">
+              <span class="nav-dot"></span> Cash Report
+            </a>
+          </div>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="main-area">
+      <!-- Top Header -->
+      <header class="top-header">
+        <button class="sidebar-toggle" id="sidebar-toggle" title="Toggle sidebar">&#9776;</button>
+        <div class="header-title" id="page-title">Dashboard</div>
+        <div class="header-user">
+          <div class="user-menu-wrap" id="user-menu-wrap">
+            <button class="user-menu-btn" id="user-menu-btn" type="button">
+              <span class="user-avatar" id="user-avatar">A</span>
+              <div class="user-info">
+                <span class="user-name" id="header-username">Admin</span>
+                <span class="user-level" id="header-level">admin</span>
+              </div>
+              <span class="user-chevron">&#9662;</span>
+            </button>
+            <div class="user-dropdown hidden" id="user-dropdown">
+              <button class="user-dropdown-item" id="change-pwd-trigger">
+                &#128274; Change Password
+              </button>
+              <div class="user-dropdown-divider"></div>
+              <button class="user-dropdown-item user-dropdown-danger" id="logout-btn">
+                &#9211; Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Page Content (fragments are injected here at startup by main.js) -->
+      <main class="page-content" id="page-content"></main>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container"></div>
+
+  <!-- DELETE CONFIRM MODAL -->
+  <div id="confirm-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-icon">&#9888;</div>
+      <h3 id="confirm-title">Confirm Delete</h3>
+      <p id="confirm-message">Are you sure you want to delete this record?</p>
+      <div class="modal-actions">
+        <button class="btn btn-danger" id="confirm-yes">Delete</button>
+        <button class="btn btn-ghost" id="confirm-no">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHANGE PASSWORD MODAL -->
+  <div id="change-pwd-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-icon" style="color:var(--primary)">&#128274;</div>
+      <h3>Change Password</h3>
+      <p style="margin-bottom:20px">Update your account password</p>
+      <form id="change-pwd-form">
+        <div class="form-group" style="margin-bottom:12px; text-align:left">
+          <label>Current Password</label>
+          <input type="password" id="cp-current" placeholder="Enter current password" autocomplete="current-password" />
+        </div>
+        <div class="form-group" style="margin-bottom:12px; text-align:left">
+          <label>New Password</label>
+          <input type="password" id="cp-new" placeholder="Min 6 characters" autocomplete="new-password" />
+        </div>
+        <div class="form-group" style="margin-bottom:16px; text-align:left">
+          <label>Confirm New Password</label>
+          <input type="password" id="cp-confirm" placeholder="Repeat new password" autocomplete="new-password" />
+        </div>
+        <div id="cp-error" class="alert alert-error hidden" style="margin-bottom:12px"></div>
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-primary">Update Password</button>
+          <button type="button" class="btn btn-ghost" id="cp-close">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- RESET PASSWORD MODAL (admin) -->
+  <div id="reset-pwd-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-icon" style="color:var(--warning)">&#128273;</div>
+      <h3>Reset Password</h3>
+      <p id="rp-label" style="margin-bottom:20px; color:var(--text-muted)"></p>
+      <form id="reset-pwd-form">
+        <input type="hidden" id="rp-user-id" />
+        <div class="form-group" style="margin-bottom:12px; text-align:left">
+          <label>New Password</label>
+          <input type="password" id="rp-new" placeholder="Min 6 characters" autocomplete="new-password" />
+        </div>
+        <div class="form-group" style="margin-bottom:16px; text-align:left">
+          <label>Confirm Password</label>
+          <input type="password" id="rp-confirm" placeholder="Repeat new password" autocomplete="new-password" />
+        </div>
+        <div id="rp-error" class="alert alert-error hidden" style="margin-bottom:12px"></div>
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-primary">Reset Password</button>
+          <button type="button" class="btn btn-ghost" id="rp-close">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- GATE PASS VIEW MODAL -->
+  <div id="gp-view-modal" class="modal-overlay hidden">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <div>
+          <h3 id="gp-view-title">Gate Pass #—</h3>
+          <div class="modal-meta">
+            <span><span class="meta-label">Trader:</span> <span id="gp-view-trader"></span></span>
+            <span><span class="meta-label">Saved:</span> <span id="gp-view-date"></span></span>
+            <span id="gp-view-vehicle-wrap"><span class="meta-label">Vehicle:</span> <span id="gp-view-vehicle"></span></span>
+            <span id="gp-view-builty-wrap" style="display:none"><span class="meta-label">Builty No.:</span> <span id="gp-view-builty"></span></span>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="gp-view-close">&#10005;</button>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:32px">#</th>
+              <th>Trader</th>
+              <th>Commodity</th>
+              <th style="width:72px">Measure</th>
+              <th style="width:72px">Qty</th>
+              <th style="width:90px">Unit</th>
+              <th style="width:100px">Total Wt</th>
+            </tr>
+          </thead>
+          <tbody id="gp-view-tbody"></tbody>
+        </table>
+      </div>
+      <div class="gp-view-actions">
+        <div class="gp-view-actions-left">
+          <button class="btn btn-primary btn-sm" id="gp-print-btn" title="Print Gate Pass">&#128424; Print</button>
+          <button class="btn btn-ghost btn-sm" id="gp-pdf-btn" title="Save as PDF">&#128196; Save PDF</button>
+        </div>
+        <button class="btn btn-ghost" id="gp-view-close-bottom">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       Scripts — load order matters:
+       core → auth/navigation → tab modules → main (entry)
+       ============================================================ -->
+  <script src="js/core.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/commodity.js"></script>
+  <script src="js/trader.js"></script>
+  <script src="js/vehicleType.js"></script>
+  <script src="js/stateCode.js"></script>
+  <script src="js/gatePass.js"></script>
+  <script src="js/userManagement.js"></script>
+  <script src="js/reports.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

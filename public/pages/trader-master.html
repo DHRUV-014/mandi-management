@@ -1,0 +1,69 @@
+<div class="page-header">
+  <h2>Shop / Trader Master</h2>
+  <p class="page-subtitle">Manage traders and shop details</p>
+</div>
+
+<div class="readonly-notice hidden" id="trader-readonly-notice">
+  &#128274; You have read-only access. Contact an administrator to make changes.
+</div>
+
+<div class="card" id="trader-form-card">
+  <div class="card-header">
+    <h3 id="trader-form-title">Add New Trader</h3>
+  </div>
+  <form id="trader-form" class="master-form">
+    <input type="hidden" id="trader-edit-id" />
+    <div class="form-row">
+      <div class="form-group">
+        <label for="trader-name">Trader Name <span class="required">*</span></label>
+        <input type="text" id="trader-name" placeholder="e.g. Ramesh Kumar" required />
+      </div>
+      <div class="form-group">
+        <label for="trader-shop-number">Shop Number <span class="required">*</span></label>
+        <input type="text" id="trader-shop-number" placeholder="e.g. A-101" required />
+      </div>
+      <div class="form-group">
+        <label for="trader-license-number">License Number <span class="required">*</span></label>
+        <input type="text" id="trader-license-number" placeholder="e.g. LIC2024001" required />
+      </div>
+      <div class="form-group">
+        <label for="trader-phone-number">Phone Number</label>
+        <input type="text" id="trader-phone-number" placeholder="e.g. 9876543210" maxlength="15" />
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" id="trader-submit-btn">Save Trader</button>
+      <button type="button" class="btn btn-ghost" id="trader-cancel-btn" style="display:none">Cancel Edit</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3>Trader List</h3>
+    <div class="card-header-actions">
+      <input type="text" id="trader-search" class="search-input" placeholder="&#128269; Search by name, shop, license…" autocomplete="off" />
+      <span class="badge" id="trader-count">0 records</span>
+    </div>
+  </div>
+  <div class="table-wrapper">
+    <table class="data-table" id="trader-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Trader Name</th>
+          <th>Shop Number</th>
+          <th>License Number</th>
+          <th>Phone Number</th>
+          <th>Status</th>
+          <th class="admin-only-th">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="trader-tbody">
+        <tr class="empty-row">
+          <td colspan="7">No traders added yet</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

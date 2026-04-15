@@ -1,0 +1,41 @@
+<div class="page-header">
+  <h2>Cash Report</h2>
+  <p class="page-subtitle">Vehicle type wise charges collection summary</p>
+</div>
+<div class="report-filter-bar card">
+  <div class="report-filter-fields">
+    <div class="form-group">
+      <label for="rpt-cash-from">From Date</label>
+      <input type="date" id="rpt-cash-from" />
+    </div>
+    <div class="form-group">
+      <label for="rpt-cash-to">To Date</label>
+      <input type="date" id="rpt-cash-to" />
+    </div>
+    <button class="btn btn-primary" id="rpt-cash-fetch">&#128269; Fetch Report</button>
+  </div>
+</div>
+<div id="rpt-cash-summary" class="report-summary hidden"></div>
+<div class="card" id="rpt-cash-result" style="display:none">
+  <div class="card-header">
+    <h3>Vehicle Type Charges</h3>
+    <div class="card-header-actions">
+      <span class="badge" id="rpt-cash-count">0 types</span>
+      <button class="btn btn-ghost btn-sm" id="rpt-cash-print">&#128424; Print</button>
+    </div>
+  </div>
+  <div class="table-wrapper">
+    <table class="data-table" id="rpt-cash-table">
+      <thead>
+        <tr>
+          <th style="width:32px">#</th>
+          <th>Vehicle Type</th>
+          <th style="text-align:center">No. of Vehicles</th>
+          <th style="text-align:right">Rate (₹)</th>
+          <th style="text-align:right">Total Charges (₹)</th>
+        </tr>
+      </thead>
+      <tbody id="rpt-cash-tbody"></tbody>
+    </table>
+  </div>
+</div>

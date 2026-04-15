@@ -1,0 +1,133 @@
+<div class="page-header">
+  <h2>Gate Pass Entry</h2>
+  <p class="page-subtitle">Record incoming goods with a gate pass</p>
+</div>
+
+<!-- Search Bar -->
+<div class="card" style="padding:14px 18px">
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <label style="font-weight:600;white-space:nowrap">&#128269; Search Gate Pass</label>
+    <input type="number" id="gp-search-input" placeholder="Enter gate pass number…" min="1" step="1"
+      style="width:200px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px" />
+    <button class="btn btn-primary btn-sm" id="gp-search-btn">View</button>
+    <span id="gp-search-error" style="color:var(--danger);font-size:13px;display:none"></span>
+  </div>
+</div>
+
+<!-- Entry Form -->
+<div class="card">
+  <div class="card-header">
+    <h3>New Gate Pass</h3>
+  </div>
+
+  <!-- Row 1: Pass Info -->
+  <div class="gp-section">
+    <div class="gp-section-label">Pass Information</div>
+    <div class="gp-fields-row">
+      <div class="form-group gp-field-sm">
+        <label>Gate Pass No.</label>
+        <input type="text" id="gp-number" class="gp-number-field" readonly tabindex="-1" />
+      </div>
+      <div class="form-group gp-field-md">
+        <label for="gp-date">Date</label>
+        <input type="date" id="gp-date" />
+      </div>
+      <div class="form-group gp-field-md">
+        <label for="gp-time">Time</label>
+        <input type="time" id="gp-time" />
+      </div>
+      <div class="form-group gp-field-md">
+        <label for="gp-builty-no">Builty No.</label>
+        <input type="text" id="gp-builty-no" placeholder="NIL" maxlength="50" autocomplete="off" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: Vehicle Info -->
+  <div class="gp-section gp-section-vehicle">
+    <div class="gp-section-label">Vehicle Information</div>
+    <div class="gp-fields-row">
+      <div class="form-group gp-field-md">
+        <label for="gp-vehicle-type">Vehicle Type <span class="required">*</span></label>
+        <select id="gp-vehicle-type">
+          <option value="">-- Select Vehicle --</option>
+        </select>
+      </div>
+      <div class="form-group gp-field-lg">
+        <label for="gp-vehicle-number">Vehicle Number <span class="required">*</span></label>
+        <input type="text" id="gp-vehicle-number" placeholder="e.g. DL10C1256" maxlength="15" autocomplete="off" spellcheck="false" style="text-transform:uppercase" />
+      </div>
+      <div class="form-group gp-field-lg">
+        <label for="gp-state-display">State</label>
+        <input type="text" id="gp-state-display" readonly tabindex="-1" placeholder="Auto-detected" class="gp-state-field" />
+      </div>
+    </div>
+    <!-- Vehicle Charges Display -->
+    <div class="gp-vehicle-charges hidden" id="gp-vehicle-charges">
+      &#128666; Vehicle Charges: <strong>₹<span id="gp-vehicle-charges-amount">0</span></strong>
+    </div>
+  </div>
+
+  <!-- Banned Trader Warning -->
+  <div class="banned-warning hidden" id="gp-banned-warning">
+    &#9888; One or more selected traders are currently <strong>banned</strong>. Gate pass cannot be saved.
+  </div>
+
+  <!-- Line Items -->
+  <div class="gp-items-section">
+    <div class="gp-items-header">
+      <h4>Line Items</h4>
+    </div>
+    <div class="table-wrapper" style="border:none; border-radius:0">
+      <table class="data-table gp-items-table">
+        <thead>
+          <tr>
+            <th style="min-width:170px">Trader / Shop</th>
+            <th style="min-width:160px">Commodity</th>
+            <th style="width:105px">Measure</th>
+            <th style="width:100px">Qty</th>
+            <th style="width:112px">Unit</th>
+            <th style="width:112px">Total Wt (kg)</th>
+            <th style="width:44px"></th>
+          </tr>
+        </thead>
+        <tbody id="gp-items-tbody"></tbody>
+      </table>
+    </div>
+    <button type="button" class="btn gp-add-row-prominent" id="gp-add-row-btn">
+      + Add Row
+    </button>
+  </div>
+
+  <div class="gp-save-bar">
+    <button type="button" class="btn btn-primary" id="gp-save-btn">&#10003; Save</button>
+    <button type="button" class="btn gp-btn-print" id="gp-save-print-btn">&#128424; Save &amp; Print</button>
+    <button type="button" class="btn gp-btn-pdf" id="gp-save-pdf-btn">&#128196; Save &amp; PDF</button>
+  </div>
+</div>
+
+<!-- Saved Gate Passes List -->
+<div class="card">
+  <div class="card-header">
+    <h3>Saved Gate Passes</h3>
+    <span class="badge" id="gp-list-count">0 records</span>
+  </div>
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th style="width:110px">Gate Pass No.</th>
+          <th>Trader</th>
+          <th style="width:130px">Vehicle No.</th>
+          <th style="width:110px">Date</th>
+          <th style="width:80px">Time</th>
+          <th style="width:80px">Items</th>
+          <th style="width:100px">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="gp-list-tbody">
+        <tr class="empty-row"><td colspan="7">No gate passes created yet</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>

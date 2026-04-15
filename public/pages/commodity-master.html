@@ -1,0 +1,69 @@
+<div class="page-header">
+  <h2>Commodity Master</h2>
+  <p class="page-subtitle">Manage commodities and their details</p>
+</div>
+
+<div class="readonly-notice hidden" id="commodity-readonly-notice">
+  &#128274; You have read-only access. Contact an administrator to make changes.
+</div>
+
+<div class="card" id="commodity-form-card">
+  <div class="card-header">
+    <h3 id="commodity-form-title">Add New Commodity</h3>
+  </div>
+  <form id="commodity-form" class="master-form">
+    <input type="hidden" id="commodity-edit-id" />
+    <div class="form-row">
+      <div class="form-group">
+        <label for="commodity-name">Commodity Name <span class="required">*</span></label>
+        <input type="text" id="commodity-name" placeholder="e.g. Wheat" required />
+      </div>
+      <div class="form-group">
+        <label for="commodity-unit">Unit <span class="required">*</span></label>
+        <select id="commodity-unit">
+          <option value="">Select unit...</option>
+          <option value="Quintal">Quintal</option>
+          <option value="Kg">Kg</option>
+          <option value="Ton">Ton</option>
+          <option value="Bag">Bag</option>
+          <option value="Piece">Piece</option>
+          <option value="Litre">Litre</option>
+          <option value="Box">Box</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="commodity-short-name">Short Name <span class="required">*</span></label>
+        <input type="text" id="commodity-short-name" placeholder="e.g. WHT" maxlength="10" required />
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" id="commodity-submit-btn">Save Commodity</button>
+      <button type="button" class="btn btn-ghost" id="commodity-cancel-btn" style="display:none">Cancel Edit</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3>Commodity List</h3>
+    <span class="badge" id="commodity-count">0 records</span>
+  </div>
+  <div class="table-wrapper">
+    <table class="data-table" id="commodity-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Commodity Name</th>
+          <th>Unit</th>
+          <th>Short Name</th>
+          <th class="admin-only-th">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="commodity-tbody">
+        <tr class="empty-row">
+          <td colspan="5">No commodities added yet</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
