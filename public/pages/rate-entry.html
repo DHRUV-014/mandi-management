@@ -1,0 +1,44 @@
+<div class="page-header">
+  <h2>Daily Rate Entry</h2>
+  <p class="page-subtitle">Enter commodity rates for a specific date</p>
+</div>
+
+<div class="card" style="padding:18px 24px">
+  <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
+    <div class="form-group" style="max-width:200px">
+      <label for="rate-date">Select Date</label>
+      <input type="date" id="rate-date" />
+    </div>
+    <button class="btn btn-primary" id="rate-fetch-btn">&#128269; Fetch Commodities</button>
+  </div>
+</div>
+
+<div class="card" id="rate-entry-card" style="display:none">
+  <div class="card-header">
+    <h3 id="rate-entry-title">Rates for —</h3>
+    <span class="badge" id="rate-commodity-count">0 commodities</span>
+  </div>
+
+  <div id="rate-no-data" class="empty-row" style="display:none;padding:32px;text-align:center;color:var(--text-muted);font-style:italic">
+    No gate pass entries found for this date.
+  </div>
+
+  <div id="rate-table-wrap" style="display:none">
+    <table class="data-table" id="rate-table">
+      <thead>
+        <tr>
+          <th style="width:32px">#</th>
+          <th>Commodity</th>
+          <th style="width:80px">Unit</th>
+          <th style="width:180px">Rate (₹ per unit)</th>
+          <th style="width:120px">Status</th>
+        </tr>
+      </thead>
+      <tbody id="rate-tbody"></tbody>
+    </table>
+
+    <div style="padding:16px 0 4px;display:flex;gap:10px">
+      <button class="btn btn-primary" id="rate-save-btn">&#10003; Save Rates</button>
+    </div>
+  </div>
+</div>

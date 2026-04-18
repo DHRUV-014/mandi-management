@@ -319,7 +319,7 @@ a { text-decoration: none; color: inherit; }
   overflow: hidden;
   max-height: 0;
 }
-.nav-group-items.open { max-height: 200px; }
+.nav-group-items.open { max-height: 400px; }
 
 .nav-item {
   display: flex;
@@ -1492,6 +1492,24 @@ a { text-decoration: none; color: inherit; }
 }
 
 /* ── Compact print for reports ─────────────────────────── */
+/* ========================================
+   RATE ENTRY
+======================================== */
+.rate-status-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 4px;
+}
+.rate-saved {
+  background: var(--success-light);
+  color: var(--success);
+}
+.rate-pending {
+  background: #f7f7f7;
+  color: var(--text-muted);
+}
+
 /* ========================================
    COMMODITY STATE WISE REPORT
 ======================================== */

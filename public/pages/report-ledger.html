@@ -1,0 +1,26 @@
+<div class="page-header">
+  <h2>Ledger Report</h2>
+  <p class="page-subtitle">Trader-wise commodity ledger with rates and calculated value</p>
+</div>
+
+<div class="report-filter-bar card">
+  <div class="report-filter-fields">
+    <div class="form-group">
+      <label for="rpt-ld-from">From Date</label>
+      <input type="date" id="rpt-ld-from" />
+    </div>
+    <div class="form-group">
+      <label for="rpt-ld-to">To Date</label>
+      <input type="date" id="rpt-ld-to" />
+    </div>
+    <div class="form-group" style="min-width:220px">
+      <label for="rpt-ld-trader">Trader / Shop (optional)</label>
+      <select id="rpt-ld-trader">
+        <option value="">— All Traders —</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" id="rpt-ld-fetch">&#128269; Generate Ledger</button>
+  </div>
+</div>
+
+<div id="rpt-ld-result"></div>

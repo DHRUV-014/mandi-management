@@ -43,6 +43,7 @@ function applyRoleBasedUI() {
   const isAdmin = state.user && state.user.level === 'admin';
 
   document.getElementById('nav-user-management').classList.toggle('hidden', !isAdmin);
+  document.getElementById('nav-report-ledger').classList.toggle('hidden', !isAdmin);
 
   document.getElementById('commodity-form-card').classList.toggle('hidden', !isAdmin);
   document.getElementById('commodity-readonly-notice').classList.toggle('hidden', isAdmin);

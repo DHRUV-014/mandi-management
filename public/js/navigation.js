@@ -14,6 +14,9 @@ const pageTitles = {
   'report-commodity': 'Commodity Wise Report',
   'report-arrival': 'Commodity State Wise Report',
   'report-cash': 'Cash Report',
+  'rate-entry':      'Daily Rate Entry',
+  'report-shopwise': 'Shop Wise Report',
+  'report-ledger':   'Ledger Report',
 };
 
 function navigateTo(page) {

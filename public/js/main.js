@@ -15,6 +15,9 @@ const PAGE_LIST = [
   'report-commodity',
   'report-arrival',
   'report-cash',
+  'rate-entry',
+  'report-shopwise',
+  'report-ledger',
   'user-management',
 ];
 
@@ -46,6 +49,7 @@ const PAGE_LIST = [
     initGatePassModule();
     initUserManagementModule();
     initReportsModule();
+    initRatesModule();
 
     // Check existing session (shows login or app)
     checkSession();

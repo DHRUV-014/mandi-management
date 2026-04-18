@@ -71,8 +71,8 @@ function rptPrintTable(title, subtitle, tableEl) {
 function initReportsModule() {
   // Set all date inputs to today by default
   const today = todayISO();
-  ['rpt-gp-from','rpt-gp-to','rpt-cm-from','rpt-cm-to','rpt-ar-from','rpt-ar-to','rpt-cash-from','rpt-cash-to']
-    .forEach(id => { document.getElementById(id).value = today; });
+  ['rpt-gp-from','rpt-gp-to','rpt-cm-from','rpt-cm-to','rpt-ar-from','rpt-ar-to','rpt-cash-from','rpt-cash-to','rpt-sw-from','rpt-sw-to','rpt-ld-from','rpt-ld-to']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = today; });
 
   // ── Gate Pass Wise Report ───────────────────────────────
   document.getElementById('rpt-gp-fetch').addEventListener('click', async () => {
@@ -90,35 +90,25 @@ function initReportsModule() {
     const result = document.getElementById('rpt-gp-result');
     result.style.display = '';
 
-    // Flatten all items, carrying gate pass info into each row
-    const allItems = data.passes.flatMap(p => p.items.map(it => ({
-      ...it,
-      gate_pass_number: p.gate_pass_number,
-      gp_date: p.created_at,
-      vehicle_number: p.vehicle_number || '—',
-    })));
-    document.getElementById('rpt-gp-count').textContent = `${allItems.length} item${allItems.length !== 1 ? 's' : ''}`;
-
     const tbody = document.getElementById('rpt-gp-tbody');
-    if (allItems.length === 0) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="9">No gate passes found in this date range</td></tr>';
+
+    if (!data.items || data.items.length === 0) {
+      document.getElementById('rpt-gp-count').textContent = '0 items';
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No gate passes found in this date range</td></tr>';
       return;
     }
 
-    tbody.innerHTML = allItems.map((it, i) => {
-      const tw = it.total_weight || 0;
-      return `<tr>
-        <td style="text-align:center;color:var(--text-muted)">${i + 1}</td>
-        <td>${rptFormatDate(it.gp_date)}</td>
-        <td>${rptFormatTime(it.gp_date)}</td>
-        <td><span class="gp-number-badge">#${it.gate_pass_number}</span></td>
-        <td>${escapeHtml(it.shop_number)}</td>
-        <td>${escapeHtml(it.commodity_name)}</td>
-        <td style="text-align:center"><strong>${it.number_of_bags}</strong></td>
-        <td style="text-align:center">${it.weight_per_bag > 0 ? it.weight_per_bag : '—'}</td>
-        <td>${escapeHtml(it.vehicle_number)}</td>
-      </tr>`;
-    }).join('');
+    document.getElementById('rpt-gp-count').textContent =
+      `${data.items.length} item${data.items.length !== 1 ? 's' : ''}`;
+
+    tbody.innerHTML = data.items.map(it => `<tr>
+      <td>${rptFormatDate(it.date)}</td>
+      <td><span class="gp-number-badge">#${it.gate_pass_number}</span></td>
+      <td>${escapeHtml(it.commodity_name)}</td>
+      <td style="text-align:center"><strong>${it.number_of_bags}</strong></td>
+      <td style="text-align:center">${it.weight_per_bag > 0 ? it.weight_per_bag : '—'}</td>
+      <td>${escapeHtml(it.vehicle_number || '—')}</td>
+    </tr>`).join('');
   });
 
   document.getElementById('rpt-gp-print').addEventListener('click', () => {
@@ -295,5 +285,260 @@ function initReportsModule() {
     const to   = document.getElementById('rpt-cash-to').value;
     const table = document.getElementById('rpt-cash-table');
     rptPrintTable('Cash Report — Vehicle Charges', `Period: ${rptFormatDate(from)} to ${rptFormatDate(to)}`, table);
+  });
+
+  // ── Shop Wise Report ─────────────────────────────────────
+  ['rpt-sw-from','rpt-sw-to','rpt-sw-shop'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('rpt-sw-fetch').click();
+    });
+  });
+
+  document.getElementById('rpt-sw-fetch').addEventListener('click', async () => {
+    const range = rptValidateDates('rpt-sw-from', 'rpt-sw-to');
+    if (!range) return;
+
+    const btn = document.getElementById('rpt-sw-fetch');
+    btn.disabled = true; btn.textContent = 'Loading…';
+
+    const shopFilter = document.getElementById('rpt-sw-shop').value.trim().toUpperCase();
+    let url = `/api/reports/shop-gate-pass?from=${range.from}&to=${range.to}`;
+    if (shopFilter) url += `&shop=${encodeURIComponent(shopFilter)}`;
+
+    const { ok, data } = await api('GET', url);
+    btn.disabled = false; btn.innerHTML = '&#128269; Check';
+
+    if (!ok) { showToast('Failed to load report', 'error'); return; }
+
+    const result = document.getElementById('rpt-sw-result');
+    result.style.display = '';
+
+    const tbody = document.getElementById('rpt-sw-tbody');
+
+    if (!data.shops || data.shops.length === 0) {
+      document.getElementById('rpt-sw-count').textContent = '0 shops';
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No data found for this date range</td></tr>';
+      return;
+    }
+
+    document.getElementById('rpt-sw-count').textContent =
+      `${data.shops.length} shop${data.shops.length !== 1 ? 's' : ''}`;
+
+    let html = '';
+    data.shops.forEach((shop, idx) => {
+      // Separator between shops (not before first)
+      if (idx > 0) {
+        html += `<tr><td colspan="6" style="padding:0;border-top:3px solid #1a6b3a"></td></tr>`;
+      }
+
+      html += `<tr class="csw-commodity-row">
+        <td colspan="6">
+          <strong>${escapeHtml(shop.shop_number)}</strong>
+          <span style="color:var(--text-muted);font-size:12px;margin-left:8px">${escapeHtml(shop.trader_name)}</span>
+        </td>
+      </tr>`;
+
+      shop.entries.forEach(e => {
+        html += `<tr>
+          <td>${rptFormatDate(e.date)}</td>
+          <td><span class="gp-number-badge">#${e.gate_pass_number}</span></td>
+          <td>${escapeHtml(e.commodity_name)}</td>
+          <td style="text-align:center"><strong>${e.number_of_bags}</strong></td>
+          <td style="text-align:center">${e.weight_per_bag > 0 ? e.weight_per_bag : '—'}</td>
+          <td>${escapeHtml(e.vehicle_number)}</td>
+        </tr>`;
+      });
+    });
+
+    tbody.innerHTML = html;
+  });
+
+  // ── Ledger Report (admin only) ──────────────────────────
+
+  async function ldLoadTraders() {
+    const from = document.getElementById('rpt-ld-from').value || today;
+    const to   = document.getElementById('rpt-ld-to').value   || today;
+    const { ok, data } = await api('GET', `/api/reports/ledger?from=${from}&to=${to}`);
+    if (!ok) return;
+    const sel = document.getElementById('rpt-ld-trader');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— All Traders —</option>' +
+      data.traders.map(t =>
+        `<option value="${t.id}" ${String(t.id) === cur ? 'selected' : ''}>${escapeHtml(t.shop_number)} — ${escapeHtml(t.trader_name)}</option>`
+      ).join('');
+  }
+
+  document.getElementById('rpt-ld-from').addEventListener('change', ldLoadTraders);
+  document.getElementById('rpt-ld-to').addEventListener('change',   ldLoadTraders);
+  ['rpt-ld-from','rpt-ld-to'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('rpt-ld-fetch').click();
+    });
+  });
+
+  document.getElementById('rpt-ld-fetch').addEventListener('click', async () => {
+    const range = rptValidateDates('rpt-ld-from', 'rpt-ld-to');
+    if (!range) return;
+
+    const traderId = document.getElementById('rpt-ld-trader').value;
+    let url = `/api/reports/ledger?from=${range.from}&to=${range.to}`;
+    if (traderId) url += `&trader_id=${traderId}`;
+
+    const btn = document.getElementById('rpt-ld-fetch');
+    btn.disabled = true; btn.textContent = 'Loading…';
+
+    const { ok, data } = await api('GET', url);
+    btn.disabled = false; btn.innerHTML = '&#128269; Generate Ledger';
+
+    if (!ok) { showToast('Failed to load ledger', 'error'); return; }
+
+    // Update trader dropdown
+    const sel = document.getElementById('rpt-ld-trader');
+    sel.innerHTML = '<option value="">— All Traders —</option>' +
+      data.traders.map(t =>
+        `<option value="${t.id}" ${String(t.id) === traderId ? 'selected' : ''}>${escapeHtml(t.shop_number)} — ${escapeHtml(t.trader_name)}</option>`
+      ).join('');
+
+    const container = document.getElementById('rpt-ld-result');
+
+    if (!data.ledger || data.ledger.length === 0) {
+      container.innerHTML = `<div class="card"><p style="padding:24px;color:var(--text-muted);text-align:center;font-style:italic">No data found for this period.</p></div>`;
+      return;
+    }
+
+    // Compute grand totals across all traders
+    let grandFee = 0, grandHasFee = false;
+    data.ledger.forEach(t => {
+      grandFee = Math.round((grandFee + (t.grand_fee || 0)) * 100) / 100;
+      if (t.grand_fee) grandHasFee = true;
+    });
+
+    // Trader detail cards
+    const traderCards = data.ledger.map(trader => {
+      const dateRows = trader.dates.map(day => {
+        const itemRows = day.items.map(item => `
+          <tr>
+            <td>${rptFormatDate(item._date || day.date)}</td>
+            <td><span class="gp-number-badge" style="font-size:11px">#${item.gate_pass_number}</span></td>
+            <td>${escapeHtml(item.vehicle_number)}</td>
+            <td>${escapeHtml(item.commodity_name)}</td>
+            <td style="text-align:center">${item.number_of_bags}</td>
+            <td style="text-align:center">${item.weight_per_bag > 0 ? item.weight_per_bag : '—'}</td>
+            <td style="text-align:right;font-weight:600">${item.value != null ? '₹' + rptFmtNum(item.value) : '<span style="color:var(--text-muted)">—</span>'}</td>
+            <td style="text-align:right;color:var(--primary);font-weight:600">${item.fee != null ? '₹' + rptFmtNum(item.fee) : '<span style="color:var(--text-muted)">—</span>'}</td>
+          </tr>`).join('');
+
+        return itemRows;
+      }).join('');
+
+      return `
+        <div class="card" style="margin-bottom:24px">
+          <div class="card-header">
+            <div>
+              <h3 style="font-size:16px">${escapeHtml(trader.trader_name)}</h3>
+              <span style="font-size:12px;color:var(--text-muted)">Shop No: <strong>${escapeHtml(trader.shop_number)}</strong></span>
+            </div>
+            <button class="btn btn-ghost btn-sm rpt-ld-print-one" data-shop="${escapeHtml(trader.shop_number)}">&#128424; Print</button>
+          </div>
+          <div class="table-wrapper">
+            <table class="data-table ledger-table" id="ledger-${trader.trader_id}">
+              <thead>
+                <tr>
+                  <th style="width:90px">Date</th>
+                  <th style="width:100px">Gate Pass</th>
+                  <th style="width:100px">Vehicle No</th>
+                  <th>Commodity</th>
+                  <th style="text-align:center;width:55px">Qty</th>
+                  <th style="text-align:center;width:55px">Unit</th>
+                  <th style="text-align:right;width:110px">Value (₹)</th>
+                  <th style="text-align:right;width:110px">Fee 1% (₹)</th>
+                </tr>
+              </thead>
+              <tbody>${dateRows}</tbody>
+              <tfoot>
+                <tr class="rpt-total-row">
+                  <td colspan="6" style="text-align:right;font-size:13px">Trader Total Fee</td>
+                  <td></td>
+                  <td style="text-align:right"><strong>${trader.grand_fee ? '₹' + rptFmtNum(trader.grand_fee) : '—'}</strong></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>`;
+    }).join('');
+
+    // Summary table (all traders in one place)
+    const summaryRows = data.ledger.map(t => `
+      <tr>
+        <td><strong>${escapeHtml(t.shop_number)}</strong></td>
+        <td>${escapeHtml(t.trader_name)}</td>
+        <td style="text-align:right">${t.grand_value ? '₹' + rptFmtNum(t.grand_value) : '—'}</td>
+        <td style="text-align:right"><strong>${t.grand_fee ? '₹' + rptFmtNum(t.grand_fee) : '—'}</strong></td>
+      </tr>`).join('');
+
+    const summaryCard = `
+      <div class="card" id="rpt-ld-summary-card" style="margin-bottom:24px;border:2px solid var(--primary)">
+        <div class="card-header">
+          <h3 style="font-size:16px;color:var(--primary)">Summary — All Traders</h3>
+          <button class="btn btn-ghost btn-sm" id="rpt-ld-print-summary">&#128424; Print Summary</button>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table" id="rpt-ld-summary-table">
+            <thead>
+              <tr>
+                <th style="width:90px">Shop No</th>
+                <th>Trader Name</th>
+                <th style="text-align:right;width:140px">Total Value (₹)</th>
+                <th style="text-align:right;width:140px">Total Fee 1% (₹)</th>
+              </tr>
+            </thead>
+            <tbody>${summaryRows}</tbody>
+            <tfoot>
+              <tr class="rpt-total-row">
+                <td colspan="3" style="text-align:right;font-size:13px">Grand Total Fee</td>
+                <td style="text-align:right"><strong>${grandHasFee ? '₹' + rptFmtNum(grandFee) : '—'}</strong></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>`;
+
+    // Top action bar with View Summary button
+    const topBar = `
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+        <button class="btn btn-primary btn-sm" id="rpt-ld-jump-summary">&#128203; View Summary</button>
+      </div>`;
+
+    container.innerHTML = topBar + traderCards + summaryCard;
+
+    // Jump to summary
+    document.getElementById('rpt-ld-jump-summary').addEventListener('click', () => {
+      document.getElementById('rpt-ld-summary-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    // Print summary
+    document.getElementById('rpt-ld-print-summary').addEventListener('click', () => {
+      const from = document.getElementById('rpt-ld-from').value;
+      const to   = document.getElementById('rpt-ld-to').value;
+      rptPrintTable('Ledger Summary — All Traders', `Period: ${rptFormatDate(from)} to ${rptFormatDate(to)}`, document.getElementById('rpt-ld-summary-table'));
+    });
+
+    // Print individual trader
+    container.querySelectorAll('.rpt-ld-print-one').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const shop  = btn.dataset.shop;
+        const table = btn.closest('.card').querySelector('.ledger-table');
+        const from  = document.getElementById('rpt-ld-from').value;
+        const to    = document.getElementById('rpt-ld-to').value;
+        rptPrintTable(`Ledger — Shop ${shop}`, `Period: ${rptFormatDate(from)} to ${rptFormatDate(to)}`, table);
+      });
+    });
+  });
+
+  document.getElementById('rpt-sw-print').addEventListener('click', () => {
+    const from = document.getElementById('rpt-sw-from').value;
+    const to   = document.getElementById('rpt-sw-to').value;
+    const table = document.getElementById('rpt-sw-table');
+    rptPrintTable('Shop Wise Report', `Period: ${rptFormatDate(from)} to ${rptFormatDate(to)}`, table);
   });
 }

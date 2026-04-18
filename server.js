@@ -16,6 +16,7 @@ const userRoutes = require('./routes/users');
 const vehicleTypeRoutes = require('./routes/vehicleType');
 const reportRoutes = require('./routes/reports');
 const stateCodeRoutes = require('./routes/stateCode');
+const ratesRoutes = require('./routes/rates');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -50,6 +51,7 @@ app.use('/api/gate-pass', gatePassRoutes);
 app.use('/api/vehicle-types', vehicleTypeRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/states', stateCodeRoutes);
+app.use('/api/rates', ratesRoutes);
 
 // Serve SPA for all non-API routes
 app.get('*', (req, res) => {

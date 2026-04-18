@@ -166,5 +166,18 @@ if (stateCount.count === 0) {
   console.log(`Seeded ${seedStates.length} state codes`);
 }
 
+// Create commodity_rates table
+db.exec(`
+  CREATE TABLE IF NOT EXISTS commodity_rates (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    date         TEXT NOT NULL,
+    commodity_id INTEGER NOT NULL,
+    rate         REAL NOT NULL,
+    created_at   TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (commodity_id) REFERENCES commodities(id),
+    UNIQUE(date, commodity_id)
+  );
+`);
+
 module.exports = db;
 
