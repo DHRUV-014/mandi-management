@@ -1,0 +1,72 @@
+<div class="page-header">
+  <div>
+    <h2>Mandi Profile</h2>
+    <p class="page-subtitle">This information will appear on all printed reports and gate passes.</p>
+  </div>
+</div>
+
+<div class="card" style="max-width:600px">
+  <form id="profile-form">
+    <div class="form-group">
+      <label>Mandi / Market Name <span style="color:var(--danger)">*</span></label>
+      <input type="text" id="pf-name" placeholder="e.g. Azadpur Krishi Upaj Mandi" maxlength="120" />
+    </div>
+    <div class="form-group">
+      <label>Address Line 1</label>
+      <input type="text" id="pf-addr1" placeholder="Street / Village / Block" maxlength="120" />
+    </div>
+    <div class="form-group">
+      <label>Address Line 2</label>
+      <input type="text" id="pf-addr2" placeholder="City, District, State, PIN" maxlength="120" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Phone / Contact</label>
+        <input type="text" id="pf-phone" placeholder="e.g. 98XXXXXXXX" maxlength="30" />
+      </div>
+      <div class="form-group">
+        <label>Licence No.</label>
+        <input type="text" id="pf-license" placeholder="Mandi licence number" maxlength="60" />
+      </div>
+    </div>
+    <div id="pf-error" class="alert alert-error hidden"></div>
+    <div style="margin-top:8px">
+      <button type="submit" class="btn btn-primary" id="pf-save-btn">Save Profile</button>
+    </div>
+  </form>
+</div>
+
+<div class="card" style="max-width:600px;border:2px solid var(--primary)">
+  <div class="card-header">
+    <h3 style="font-size:15px;color:var(--primary)">Gate Pass Series</h3>
+  </div>
+  <div style="padding:10px 0 4px;font-size:13px;line-height:2">
+    Last gate pass saved: <strong id="pf-gp-max">—</strong><br>
+    Next gate pass will be: <strong id="pf-gp-next" style="color:var(--primary)">—</strong>
+  </div>
+  <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">
+    Format: <code>PREFIX G YY NNNNNN</code> — Mandi Prefix + Gate + Year + Sequential
+  </div>
+</div>
+
+<div class="card" style="max-width:600px;border:2px solid var(--warning)">
+  <div class="card-header">
+    <h3 style="font-size:15px;color:var(--warning-dark,#b45309)">&#127970; Device Settings</h3>
+  </div>
+  <div id="ds-settings-view" style="padding:6px 0 12px;font-size:13px">
+    Gate Number for this terminal: <strong id="ds-current-gate">—</strong>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Saved on this device only. Each terminal/gate should have a unique number (1–9).</div>
+  </div>
+  <div id="ds-settings-edit" class="hidden" style="padding:6px 0 12px">
+    <div class="form-group" style="margin-bottom:8px">
+      <label>Gate Number</label>
+      <input type="number" id="ds-edit-gate" min="1" max="9" step="1" style="max-width:100px" />
+    </div>
+    <div id="ds-edit-error" class="alert alert-error hidden" style="margin-bottom:8px"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary btn-sm" id="ds-edit-save">Save</button>
+      <button class="btn btn-ghost btn-sm" id="ds-edit-cancel">Cancel</button>
+    </div>
+  </div>
+  <button class="btn btn-sm btn-warning" id="ds-change-btn">Change Gate Number</button>
+</div>

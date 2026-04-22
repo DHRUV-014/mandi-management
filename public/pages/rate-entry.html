@@ -1,44 +1,97 @@
 <div class="page-header">
-  <h2>Daily Rate Entry</h2>
-  <p class="page-subtitle">Enter commodity rates for a specific date</p>
-</div>
-
-<div class="card" style="padding:18px 24px">
-  <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
-    <div class="form-group" style="max-width:200px">
-      <label for="rate-date">Select Date</label>
-      <input type="date" id="rate-date" />
-    </div>
-    <button class="btn btn-primary" id="rate-fetch-btn">&#128269; Fetch Commodities</button>
+  <div>
+    <h2>Daily Rate Entry</h2>
+    <p class="page-subtitle">Enter and view commodity rates by date</p>
   </div>
 </div>
 
-<div class="card" id="rate-entry-card" style="display:none">
-  <div class="card-header">
-    <h3 id="rate-entry-title">Rates for —</h3>
-    <span class="badge" id="rate-commodity-count">0 commodities</span>
+<!-- Tab switcher -->
+<div class="card" style="padding:0;overflow:hidden;margin-bottom:0;border-bottom:none;border-bottom-left-radius:0;border-bottom-right-radius:0">
+  <div class="tab-bar" style="display:flex;border-bottom:2px solid var(--border)">
+    <button class="rate-tab-btn active" id="rate-tab-entry" style="flex:1;padding:12px 20px;border:none;background:none;font-size:14px;font-weight:600;cursor:pointer;color:var(--primary);border-bottom:2px solid var(--primary);margin-bottom:-2px">
+      ✏️ Enter Rates
+    </button>
+    <button class="rate-tab-btn" id="rate-tab-view" style="flex:1;padding:12px 20px;border:none;background:none;font-size:14px;font-weight:600;cursor:pointer;color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-2px">
+      📋 View Saved Rates
+    </button>
   </div>
+</div>
 
-  <div id="rate-no-data" class="empty-row" style="display:none;padding:32px;text-align:center;color:var(--text-muted);font-style:italic">
-    No gate pass entries found for this date.
-  </div>
+<!-- ── TAB 1: Enter Rates ───────────────────────────────── -->
+<div id="rate-panel-entry">
 
-  <div id="rate-table-wrap" style="display:none">
-    <table class="data-table" id="rate-table">
-      <thead>
-        <tr>
-          <th style="width:32px">#</th>
-          <th>Commodity</th>
-          <th style="width:80px">Unit</th>
-          <th style="width:180px">Rate (₹ per unit)</th>
-          <th style="width:120px">Status</th>
-        </tr>
-      </thead>
-      <tbody id="rate-tbody"></tbody>
-    </table>
-
-    <div style="padding:16px 0 4px;display:flex;gap:10px">
-      <button class="btn btn-primary" id="rate-save-btn">&#10003; Save Rates</button>
+  <div class="card" style="padding:18px 24px;border-top-left-radius:0;border-top-right-radius:0">
+    <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
+      <div class="form-group" style="max-width:200px">
+        <label for="rate-date">Select Date</label>
+        <input type="date" id="rate-date" />
+      </div>
+      <button class="btn btn-primary" id="rate-fetch-btn">&#128269; Fetch Commodities</button>
+      <span style="font-size:12px;color:var(--text-muted);align-self:flex-end;padding-bottom:4px">
+        Shows all commodities. 🟢 = arrived on this date
+      </span>
     </div>
   </div>
+
+  <div class="card" id="rate-entry-card" style="display:none">
+    <div class="card-header">
+      <h3 id="rate-entry-title">Rates for —</h3>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span class="badge" id="rate-commodity-count">0 commodities</span>
+        <span class="badge" id="rate-arrived-count" style="background:var(--success,#16a34a);color:#fff;display:none">0 arrived today</span>
+      </div>
+    </div>
+
+    <div id="rate-no-data" class="empty-row" style="display:none;padding:32px;text-align:center;color:var(--text-muted);font-style:italic">
+      No commodities found. Add commodities in the Commodity Master first.
+    </div>
+
+    <div id="rate-table-wrap" style="display:none">
+      <table class="data-table" id="rate-table">
+        <thead>
+          <tr>
+            <th style="width:32px">#</th>
+            <th>Commodity</th>
+            <th style="width:80px">Unit</th>
+            <th style="width:180px">Rate (₹ per unit)</th>
+            <th style="width:120px">Status</th>
+          </tr>
+        </thead>
+        <tbody id="rate-tbody"></tbody>
+      </table>
+
+      <div style="padding:16px 0 4px;display:flex;gap:10px;align-items:center">
+        <button class="btn btn-primary" id="rate-save-btn">&#10003; Save Rates</button>
+        <span style="font-size:12px;color:var(--text-muted)">Only filled-in rates will be saved. Leave blank to skip a commodity.</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── TAB 2: View Saved Rates ─────────────────────────── -->
+<div id="rate-panel-view" style="display:none">
+
+  <div class="card" style="padding:18px 24px;border-top-left-radius:0;border-top-right-radius:0">
+    <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
+      <div class="form-group" style="max-width:180px">
+        <label for="rate-view-from">From Date</label>
+        <input type="date" id="rate-view-from" />
+      </div>
+      <div class="form-group" style="max-width:180px">
+        <label for="rate-view-to">To Date</label>
+        <input type="date" id="rate-view-to" />
+      </div>
+      <button class="btn btn-primary" id="rate-view-fetch-btn">&#128269; Fetch History</button>
+    </div>
+  </div>
+
+  <div id="rate-history-result" style="display:none">
+    <!-- date cards injected here -->
+  </div>
+
+  <div id="rate-history-empty" style="display:none;padding:40px;text-align:center;color:var(--text-muted);font-style:italic">
+    No rates saved in this date range.
+  </div>
+
 </div>

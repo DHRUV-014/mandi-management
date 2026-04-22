@@ -1,13 +1,18 @@
 <div class="page-header">
-  <h2>Gate Pass Entry</h2>
-  <p class="page-subtitle">Record incoming goods with a gate pass</p>
+  <div>
+    <h2>Gate Pass Entry</h2>
+    <p class="page-subtitle">Record incoming goods with a gate pass</p>
+  </div>
+  <div id="gp-mandi-info" style="font-size:13px;display:none"></div>
 </div>
+
+<div id="gp-entry-form-area">
 
 <!-- Search Bar -->
 <div class="card" style="padding:14px 18px">
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
     <label style="font-weight:600;white-space:nowrap">&#128269; Search Gate Pass</label>
-    <input type="number" id="gp-search-input" placeholder="Enter gate pass number…" min="1" step="1"
+    <input type="text" id="gp-search-input" placeholder="Enter gate pass number… e.g. AZ126000001"
       style="width:200px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px" />
     <button class="btn btn-primary btn-sm" id="gp-search-btn">View</button>
     <span id="gp-search-error" style="color:var(--danger);font-size:13px;display:none"></span>
@@ -30,7 +35,7 @@
       </div>
       <div class="form-group gp-field-md">
         <label for="gp-date">Date</label>
-        <input type="date" id="gp-date" />
+        <input type="date" id="gp-date" readonly tabindex="-1" style="background:#f8fafc;cursor:not-allowed" onkeydown="return false" onmousedown="event.preventDefault()" />
       </div>
       <div class="form-group gp-field-md">
         <label for="gp-time">Time</label>
@@ -59,7 +64,7 @@
       </div>
       <div class="form-group gp-field-lg">
         <label for="gp-state-display">State</label>
-        <input type="text" id="gp-state-display" readonly tabindex="-1" placeholder="Auto-detected" class="gp-state-field" />
+        <input type="text" id="gp-state-display" placeholder="Auto-detected" class="gp-state-field" />
       </div>
     </div>
     <!-- Vehicle Charges Display -->
@@ -131,3 +136,5 @@
     </table>
   </div>
 </div>
+
+</div><!-- end gp-entry-form-area -->

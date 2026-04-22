@@ -1,0 +1,42 @@
+<div class="page-header">
+  <div>
+    <h2>Database Viewer</h2>
+    <p class="page-subtitle">Admin only — browse MySQL databases and financial year data.</p>
+  </div>
+</div>
+
+<!-- Financial Year Switcher -->
+<div class="card" style="max-width:900px">
+  <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
+    <h3 style="font-size:15px">Financial Years</h3>
+    <span id="adb-active-label" style="font-size:12px;color:var(--primary);font-weight:600"></span>
+  </div>
+  <div id="adb-fy-list" style="display:flex;flex-wrap:wrap;gap:8px;padding:6px 0 4px"></div>
+</div>
+
+<!-- DB / Table Browser -->
+<div class="card" style="max-width:900px">
+  <div class="card-header">
+    <h3 style="font-size:15px">Table Browser</h3>
+  </div>
+  <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px">
+    <div class="form-group" style="margin:0;min-width:200px">
+      <label>Database</label>
+      <select id="adb-db-select" class="form-control"></select>
+    </div>
+    <div class="form-group" style="margin:0;min-width:180px">
+      <label>Table</label>
+      <select id="adb-table-select" class="form-control"></select>
+    </div>
+    <button class="btn btn-primary btn-sm" id="adb-load-btn">Load Data</button>
+  </div>
+
+  <div id="adb-info" style="font-size:12px;color:var(--text-muted);margin-bottom:8px"></div>
+  <div class="table-wrapper" id="adb-table-wrapper" style="display:none">
+    <table class="data-table" id="adb-data-table">
+      <thead id="adb-thead"></thead>
+      <tbody id="adb-tbody"></tbody>
+    </table>
+  </div>
+  <div id="adb-pagination" style="margin-top:10px;display:flex;gap:8px;align-items:center"></div>
+</div>

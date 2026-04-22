@@ -5,6 +5,16 @@
 let editingCommodityId = null;
 
 async function loadCommodities() {
+  const formCard = document.getElementById('commodity-form-card');
+  if (state.user?.level === 'superadmin' && !state.user?.current_mandi_id) {
+    if (formCard) formCard.style.display = 'none';
+    const tbody = document.getElementById('commodity-tbody');
+    if (tbody) tbody.innerHTML = '<tr class="empty-row"><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)">Select a mandi from the context bar above to continue</td></tr>';
+    const badge = document.getElementById('commodity-count');
+    if (badge) badge.textContent = '0 records';
+    return;
+  }
+  if (formCard) formCard.style.display = '';
   const { ok, data } = await api('GET', '/api/commodities');
   if (!ok) { showToast('Failed to load commodities', 'error'); return; }
   renderCommodityTable(data);

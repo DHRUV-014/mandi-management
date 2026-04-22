@@ -1,75 +1,80 @@
 const express = require('express');
-const db = require('../database');
-const { requireAuth, requireAdmin } = require('./middleware');
-
+const { requireAuth, requireAdmin, requireFYDB } = require('./middleware');
 const router = express.Router();
 
-// Get all commodities — any logged-in user
-router.get('/', requireAuth, (req, res) => {
-  const commodities = db.prepare('SELECT * FROM commodities ORDER BY name').all();
-  res.json(commodities);
+router.get('/', requireAuth, requireFYDB, async (req, res) => {
+  try {
+    const [commodities] = await req.fyDbRead.execute('SELECT * FROM commodities ORDER BY name');
+    res.json(commodities);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load commodities' });
+  }
 });
 
-// Add commodity — admin only
-router.post('/', requireAdmin, (req, res) => {
+router.post('/', requireAdmin, requireFYDB, async (req, res) => {
   const { name, unit, short_name } = req.body;
-
   if (!name || !unit || !short_name)
     return res.status(400).json({ error: 'All fields are required' });
 
-  const trimmedName = name.trim();
-  const trimmedUnit = unit.trim();
-  const trimmedShortName = short_name.trim();
-
-  const existingName = db.prepare('SELECT id FROM commodities WHERE LOWER(name) = LOWER(?)').get(trimmedName);
-  if (existingName) return res.status(409).json({ error: 'Commodity name already exists' });
-
-  const existingShortName = db.prepare('SELECT id FROM commodities WHERE LOWER(short_name) = LOWER(?)').get(trimmedShortName);
-  if (existingShortName) return res.status(409).json({ error: 'Short name already exists' });
+  const trimName  = name.trim();
+  const trimUnit  = unit.trim();
+  const trimShort = short_name.trim();
 
   try {
-    const result = db.prepare('INSERT INTO commodities (name, unit, short_name) VALUES (?, ?, ?)').run(trimmedName, trimmedUnit, trimmedShortName);
-    const commodity = db.prepare('SELECT * FROM commodities WHERE id = ?').get(result.lastInsertRowid);
-    res.status(201).json(commodity);
+    const [byName]  = await req.fyDb.execute('SELECT id FROM commodities WHERE LOWER(name) = LOWER(?)', [trimName]);
+    if (byName.length) return res.status(409).json({ error: 'Commodity name already exists' });
+
+    const [byShort] = await req.fyDb.execute('SELECT id FROM commodities WHERE LOWER(short_name) = LOWER(?)', [trimShort]);
+    if (byShort.length) return res.status(409).json({ error: 'Short name already exists' });
+
+    const [result] = await req.fyDb.execute(
+      'INSERT INTO commodities (name, unit, short_name) VALUES (?, ?, ?)', [trimName, trimUnit, trimShort]
+    );
+    const [rows] = await req.fyDb.execute('SELECT * FROM commodities WHERE id = ?', [result.insertId]);
+    res.status(201).json(rows[0]);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Failed to save commodity' });
   }
 });
 
-// Update commodity — admin only
-router.put('/:id', requireAdmin, (req, res) => {
+router.put('/:id', requireAdmin, requireFYDB, async (req, res) => {
   const { id } = req.params;
   const { name, unit, short_name } = req.body;
-
   if (!name || !unit || !short_name)
     return res.status(400).json({ error: 'All fields are required' });
 
-  const trimmedName = name.trim();
-  const trimmedUnit = unit.trim();
-  const trimmedShortName = short_name.trim();
-
-  const existingName = db.prepare('SELECT id FROM commodities WHERE LOWER(name) = LOWER(?) AND id != ?').get(trimmedName, id);
-  if (existingName) return res.status(409).json({ error: 'Commodity name already exists' });
-
-  const existingShortName = db.prepare('SELECT id FROM commodities WHERE LOWER(short_name) = LOWER(?) AND id != ?').get(trimmedShortName, id);
-  if (existingShortName) return res.status(409).json({ error: 'Short name already exists' });
+  const trimName  = name.trim();
+  const trimUnit  = unit.trim();
+  const trimShort = short_name.trim();
 
   try {
-    db.prepare('UPDATE commodities SET name = ?, unit = ?, short_name = ? WHERE id = ?').run(trimmedName, trimmedUnit, trimmedShortName, id);
-    const commodity = db.prepare('SELECT * FROM commodities WHERE id = ?').get(id);
-    if (!commodity) return res.status(404).json({ error: 'Commodity not found' });
-    res.json(commodity);
+    const [byName]  = await req.fyDb.execute('SELECT id FROM commodities WHERE LOWER(name) = LOWER(?) AND id != ?', [trimName, id]);
+    if (byName.length) return res.status(409).json({ error: 'Commodity name already exists' });
+
+    const [byShort] = await req.fyDb.execute('SELECT id FROM commodities WHERE LOWER(short_name) = LOWER(?) AND id != ?', [trimShort, id]);
+    if (byShort.length) return res.status(409).json({ error: 'Short name already exists' });
+
+    await req.fyDb.execute('UPDATE commodities SET name = ?, unit = ?, short_name = ? WHERE id = ?', [trimName, trimUnit, trimShort, id]);
+    const [rows] = await req.fyDb.execute('SELECT * FROM commodities WHERE id = ?', [id]);
+    if (!rows.length) return res.status(404).json({ error: 'Commodity not found' });
+    res.json(rows[0]);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Failed to update commodity' });
   }
 });
 
-// Delete commodity — admin only
-router.delete('/:id', requireAdmin, (req, res) => {
-  const { id } = req.params;
-  const result = db.prepare('DELETE FROM commodities WHERE id = ?').run(id);
-  if (result.changes === 0) return res.status(404).json({ error: 'Commodity not found' });
-  res.json({ success: true });
+router.delete('/:id', requireAdmin, requireFYDB, async (req, res) => {
+  try {
+    const [result] = await req.fyDb.execute('DELETE FROM commodities WHERE id = ?', [req.params.id]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Commodity not found' });
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete commodity' });
+  }
 });
 
 module.exports = router;

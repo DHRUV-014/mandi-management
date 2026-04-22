@@ -1,14 +1,123 @@
-<div class="welcome-card">
-  <h2>Welcome to Mandi Management System</h2>
-  <p>Select a module from the sidebar to get started.</p>
-  <div class="welcome-cards">
-    <div class="stat-card" data-page="commodity-master">
-      <div class="stat-icon">&#9776;</div>
-      <div class="stat-label">Commodity Master</div>
+<!-- SUPERADMIN DASHBOARD -->
+<div id="db-superadmin" class="hidden">
+
+  <div class="db-hero db-hero-sa">
+    <div class="db-hero-left">
+      <div class="db-greeting" id="db-sa-greeting">Good morning</div>
+      <div class="db-hero-title">System Overview</div>
+      <div class="db-hero-sub">Manage mandis, financial years and users from here.</div>
     </div>
-    <div class="stat-card" data-page="trader-master">
-      <div class="stat-icon">&#9993;</div>
-      <div class="stat-label">Trader Master</div>
+    <div class="db-hero-right">
+      <div class="db-big-stat">
+        <div class="db-big-num" id="db-sa-mandi-count">—</div>
+        <div class="db-big-label">Mandis</div>
+      </div>
     </div>
   </div>
+
+  <!-- Setup steps banner -->
+  <div class="db-steps-banner">
+    <div class="db-step"><div class="db-step-num">1</div><div class="db-step-info"><strong>Add Mandi</strong><span>Mandi Management</span></div></div>
+    <div class="db-step-arrow">›</div>
+    <div class="db-step"><div class="db-step-num">2</div><div class="db-step-info"><strong>Start Financial Year</strong><span>Mandi → Financial Years</span></div></div>
+    <div class="db-step-arrow">›</div>
+    <div class="db-step"><div class="db-step-num">3</div><div class="db-step-info"><strong>Create Admin User</strong><span>User Management</span></div></div>
+    <div class="db-step-arrow">›</div>
+    <div class="db-step"><div class="db-step-num">4</div><div class="db-step-info"><strong>Repeat each April</strong><span>Start new FY for mandis</span></div></div>
+  </div>
+
+  <!-- Mandi cards -->
+  <div id="db-sa-mandis" style="display:flex;flex-direction:column;gap:12px;max-width:860px"></div>
+
+</div>
+
+
+<!-- ADMIN / USER DASHBOARD -->
+<div id="db-user" class="hidden">
+
+  <div class="db-hero db-hero-user">
+    <div class="db-hero-left">
+      <div class="db-greeting" id="db-greeting"></div>
+      <div class="db-hero-title" id="db-mandi-title"></div>
+      <div class="db-hero-sub" id="db-hero-sub"></div>
+    </div>
+    <div class="db-hero-right">
+      <div class="db-big-stat">
+        <div class="db-big-num" id="db-today-big">—</div>
+        <div class="db-big-label">Gate Passes Today</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- No FY warning -->
+  <div id="db-no-fy-warning" class="db-alert-banner hidden">
+    ⚠ <strong>No active financial year.</strong>&nbsp; Contact superadmin to start one before entering data.
+  </div>
+
+  <!-- Stats row -->
+  <div class="db-stats-row">
+    <div class="db-stat-card" onclick="navigateTo('gate-pass')">
+      <div class="db-stat-icon" style="background:#eff6ff;color:#2563eb">📋</div>
+      <div>
+        <div class="db-stat-num" id="db-total-gp">—</div>
+        <div class="db-stat-lbl">Total Gate Passes This FY</div>
+      </div>
+    </div>
+    <div class="db-stat-card" onclick="navigateTo('trader-master')">
+      <div class="db-stat-icon" style="background:#fff7ed;color:#ea580c">🏪</div>
+      <div>
+        <div class="db-stat-num" id="db-traders">—</div>
+        <div class="db-stat-lbl">Active Traders</div>
+      </div>
+    </div>
+    <div class="db-stat-card" onclick="navigateTo('commodity-master')">
+      <div class="db-stat-icon" style="background:#fdf4ff;color:#9333ea">🌾</div>
+      <div>
+        <div class="db-stat-num" id="db-commodities">—</div>
+        <div class="db-stat-lbl">Commodities</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick actions -->
+  <div class="db-actions-section">
+    <div class="db-actions-title">Quick Actions</div>
+    <div class="db-actions-row">
+      <div class="db-action-card db-action-primary" onclick="navigateTo('gate-pass')">
+        <div class="db-action-icon">📋</div>
+        <div class="db-action-label">New Gate Pass</div>
+        <div class="db-action-sub">Record incoming goods</div>
+      </div>
+      <div class="db-action-card" onclick="navigateTo('rate-entry')">
+        <div class="db-action-icon">💰</div>
+        <div class="db-action-label">Daily Rate Entry</div>
+        <div class="db-action-sub">Enter today's commodity rates</div>
+      </div>
+      <div class="db-action-card" onclick="navigateTo('report-gatepass')">
+        <div class="db-action-icon">📊</div>
+        <div class="db-action-label">Reports</div>
+        <div class="db-action-sub">View gate pass reports</div>
+      </div>
+      <div class="db-action-card hidden" id="db-action-users" onclick="navigateTo('user-management')">
+        <div class="db-action-icon">👥</div>
+        <div class="db-action-label">User Management</div>
+        <div class="db-action-sub">Add or manage users</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- First-time setup checklist (admin only, shown when data is empty) -->
+  <div id="db-checklist-card" class="hidden" style="max-width:620px">
+    <div class="db-checklist-header">🔧 First-Time Setup — Complete these before operators start</div>
+    <div id="db-checklist-body" style="display:flex;flex-direction:column;gap:8px;padding:16px"></div>
+  </div>
+
+</div>
+
+
+<!-- NO MANDI ASSIGNED -->
+<div id="db-no-mandi" class="hidden" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;text-align:center;color:var(--text-muted)">
+  <div style="font-size:56px;margin-bottom:16px">🔒</div>
+  <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Account Not Assigned</div>
+  <div style="font-size:13px">Your account is not linked to any mandi.<br>Contact your superadmin to fix this.</div>
 </div>

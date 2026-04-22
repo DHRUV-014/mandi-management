@@ -8,10 +8,11 @@
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
-    "better-sqlite3": "^12.9.0",
-    "connect-sqlite3": "^0.9.16",
     "dotenv": "^17.4.2",
     "express": "^4.22.1",
-    "express-session": "^1.19.0"
+    "express-mysql-session": "^3.0.3",
+    "express-session": "^1.19.0",
+    "mysql2": "^3.22.1",
+    "ws": "^8.20.0"
   }
 }

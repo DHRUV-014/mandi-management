@@ -1,0 +1,102 @@
+<div class="page-header">
+  <div>
+    <h2>Mandi Management</h2>
+    <p class="page-subtitle">Manage mandis and their financial year databases</p>
+  </div>
+  <button class="btn btn-primary" id="mm-add-btn">+ Add New Mandi</button>
+</div>
+
+<!-- Add Mandi Form -->
+<div class="card" id="mm-add-card" style="max-width:700px;display:none;margin-bottom:16px">
+  <div class="card-header">
+    <h3 style="font-size:15px">Add New Mandi</h3>
+    <button class="btn btn-ghost btn-sm" id="mm-add-cancel">✕ Cancel</button>
+  </div>
+  <form id="mm-add-form">
+    <div class="form-row">
+      <div class="form-group" style="flex:2">
+        <label>Mandi Name <span style="color:var(--danger)">*</span></label>
+        <input type="text" id="mm-name" placeholder="e.g. APMCK Tilak Nagar" maxlength="200" />
+      </div>
+      <div class="form-group" style="flex:1">
+        <label>Prefix <span style="color:var(--danger)">*</span></label>
+        <input type="text" id="mm-prefix" placeholder="e.g. AKP" maxlength="10" style="text-transform:uppercase" />
+        <span style="font-size:11px;color:var(--text-muted)">2–10 letters, used in gate pass numbers</span>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Address Line 1</label>
+        <input type="text" id="mm-addr1" placeholder="Street / Village / Block" maxlength="200" />
+      </div>
+      <div class="form-group">
+        <label>Address Line 2</label>
+        <input type="text" id="mm-addr2" placeholder="City, District, PIN" maxlength="200" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="text" id="mm-phone" placeholder="Contact number" maxlength="30" />
+      </div>
+      <div class="form-group">
+        <label>Licence No.</label>
+        <input type="text" id="mm-license" placeholder="Mandi licence number" maxlength="60" />
+      </div>
+    </div>
+    <div id="mm-add-error" class="alert alert-error hidden"></div>
+    <div style="margin-top:14px;display:flex;gap:10px">
+      <button type="submit" class="btn btn-primary" id="mm-add-submit">Add Mandi</button>
+      <button type="button" class="btn btn-ghost" id="mm-add-cancel2">Cancel</button>
+    </div>
+  </form>
+</div>
+
+<!-- Edit Mandi Form -->
+<div class="card" id="mm-edit-card" style="max-width:700px;display:none;margin-bottom:16px">
+  <div class="card-header">
+    <h3 style="font-size:15px" id="mm-edit-title">Edit Mandi</h3>
+    <button class="btn btn-ghost btn-sm" id="mm-edit-cancel">✕ Cancel</button>
+  </div>
+  <form id="mm-edit-form">
+    <input type="hidden" id="mm-edit-id" />
+    <div class="form-row">
+      <div class="form-group" style="flex:2">
+        <label>Mandi Name <span style="color:var(--danger)">*</span></label>
+        <input type="text" id="mm-edit-name" maxlength="200" />
+      </div>
+      <div class="form-group" style="flex:1">
+        <label>Prefix <span style="font-size:11px;color:var(--text-muted)">(fixed)</span></label>
+        <input type="text" id="mm-edit-prefix" disabled style="opacity:.6" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Address Line 1</label>
+        <input type="text" id="mm-edit-addr1" maxlength="200" />
+      </div>
+      <div class="form-group">
+        <label>Address Line 2</label>
+        <input type="text" id="mm-edit-addr2" maxlength="200" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="text" id="mm-edit-phone" maxlength="30" />
+      </div>
+      <div class="form-group">
+        <label>Licence No.</label>
+        <input type="text" id="mm-edit-license" maxlength="60" />
+      </div>
+    </div>
+    <div id="mm-edit-error" class="alert alert-error hidden"></div>
+    <div style="margin-top:14px;display:flex;gap:10px">
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+      <button type="button" class="btn btn-ghost" id="mm-edit-cancel2">Cancel</button>
+    </div>
+  </form>
+</div>
+
+<!-- Mandis List (rendered by JS) -->
+<div id="mm-mandi-list"></div>

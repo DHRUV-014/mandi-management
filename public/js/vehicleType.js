@@ -5,6 +5,16 @@
 let editingVehicleTypeId = null;
 
 async function loadVehicleTypes() {
+  const formCard = document.getElementById('vehicle-form-card');
+  if (state.user?.level === 'superadmin' && !state.user?.current_mandi_id) {
+    if (formCard) formCard.style.display = 'none';
+    const tbody = document.getElementById('vehicle-tbody');
+    if (tbody) tbody.innerHTML = '<tr class="empty-row"><td colspan="4" style="text-align:center;padding:32px;color:var(--text-muted)">Select a mandi from the context bar above to continue</td></tr>';
+    const badge = document.getElementById('vehicle-count');
+    if (badge) badge.textContent = '0 records';
+    return;
+  }
+  if (formCard) formCard.style.display = '';
   const { ok, data } = await api('GET', '/api/vehicle-types');
   if (!ok) { showToast('Failed to load vehicle types', 'error'); return; }
   renderVehicleTypeTable(data);

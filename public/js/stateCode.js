@@ -7,7 +7,7 @@ let allStates = [];
 
 async function loadStates() {
   const { ok, data } = await api('GET', '/api/states/all');
-  if (!ok) { showToast('Failed to load state codes', 'error'); return; }
+  if (!ok) { return; }
   allStates = data;
   const searchEl = document.getElementById('state-search');
   if (searchEl) searchEl.value = '';

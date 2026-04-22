@@ -29,7 +29,12 @@ function showApp() {
   document.getElementById('app').classList.remove('hidden');
   updateHeaderUser();
   applyRoleBasedUI();
+  initContextBar();
+  loadMandiProfile();
   navigateTo('dashboard');
+  loadDashboard();
+  checkDeviceSetup();
+  connectLiveUpdates();
 }
 
 function updateHeaderUser() {
@@ -40,21 +45,41 @@ function updateHeaderUser() {
 }
 
 function applyRoleBasedUI() {
-  const isAdmin = state.user && state.user.level === 'admin';
+  const level          = state.user && state.user.level;
+  const isSuperAdmin   = level === 'superadmin';
+  const isAtLeastAdmin = isSuperAdmin || level === 'admin';
 
-  document.getElementById('nav-user-management').classList.toggle('hidden', !isAdmin);
-  document.getElementById('nav-report-ledger').classList.toggle('hidden', !isAdmin);
+  // Nav: permission-gated items (data-perm attribute on nav items)
+  document.querySelectorAll('.nav-item[data-perm]').forEach(el => {
+    el.classList.toggle('hidden', !hasPermission(el.dataset.perm));
+  });
 
-  document.getElementById('commodity-form-card').classList.toggle('hidden', !isAdmin);
-  document.getElementById('commodity-readonly-notice').classList.toggle('hidden', isAdmin);
-  document.getElementById('trader-form-card').classList.toggle('hidden', !isAdmin);
-  document.getElementById('trader-readonly-notice').classList.toggle('hidden', isAdmin);
-  document.getElementById('vehicle-form-card').classList.toggle('hidden', !isAdmin);
-  document.getElementById('vehicle-readonly-notice').classList.toggle('hidden', isAdmin);
-  document.getElementById('state-form-card').classList.toggle('hidden', !isAdmin);
-  document.getElementById('state-readonly-notice').classList.toggle('hidden', isAdmin);
+  // Nav: role-only items
+  document.getElementById('nav-user-management').classList.toggle('hidden', !isAtLeastAdmin);
+  document.getElementById('nav-report-ledger').classList.toggle('hidden', !hasPermission('reports') || !isAtLeastAdmin);
+  document.getElementById('nav-admin-sql').classList.toggle('hidden', !isSuperAdmin);
+  document.getElementById('nav-mandi-profile').classList.toggle('hidden', level !== 'admin');
+  const navMandiMgmt = document.getElementById('nav-mandi-management');
+  if (navMandiMgmt) navMandiMgmt.classList.toggle('hidden', !isSuperAdmin);
 
-  document.querySelectorAll('.admin-only-th').forEach(th => th.classList.toggle('hidden', !isAdmin));
+  const dsChangeBtn = document.getElementById('ds-change-btn');
+  if (dsChangeBtn) dsChangeBtn.classList.toggle('hidden', !isAtLeastAdmin);
+
+  // Master data forms: admin+ with permission
+  const canEditMasters = isAtLeastAdmin;
+  document.getElementById('commodity-form-card').classList.toggle('hidden', !canEditMasters);
+  document.getElementById('commodity-readonly-notice').classList.toggle('hidden', canEditMasters);
+  document.getElementById('trader-form-card').classList.toggle('hidden', !canEditMasters);
+  document.getElementById('trader-readonly-notice').classList.toggle('hidden', canEditMasters);
+  document.getElementById('vehicle-form-card').classList.toggle('hidden', !canEditMasters);
+  document.getElementById('vehicle-readonly-notice').classList.toggle('hidden', canEditMasters);
+  document.getElementById('state-form-card').classList.toggle('hidden', !canEditMasters);
+  document.getElementById('state-readonly-notice').classList.toggle('hidden', canEditMasters);
+
+  document.querySelectorAll('.admin-only-th').forEach(th => th.classList.toggle('hidden', !canEditMasters));
+
+  // Delete GP button: superadmin only
+  document.querySelectorAll('.gp-delete-btn').forEach(btn => btn.classList.toggle('hidden', !isSuperAdmin));
 }
 
 function initAuthModule() {
@@ -97,6 +122,7 @@ function initAuthModule() {
   document.getElementById('logout-btn').addEventListener('click', async () => {
     await api('POST', '/api/auth/logout');
     state.user = null;
+    disconnectLiveUpdates();
     document.getElementById('user-dropdown').classList.add('hidden');
     showLogin();
     document.getElementById('username').value = '';

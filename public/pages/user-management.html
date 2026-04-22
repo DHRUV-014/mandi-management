@@ -1,18 +1,22 @@
 <div class="page-header">
-  <h2>User Management</h2>
-  <p class="page-subtitle">Manage system users and access levels</p>
+  <div>
+    <h2>User Management</h2>
+    <p class="page-subtitle">Manage users, mandi access and feature permissions</p>
+  </div>
+  <button class="btn btn-primary" id="um-add-toggle-btn">+ Add User</button>
 </div>
 
-<!-- Add User Form -->
-<div class="card">
+<!-- Add User Form (hidden by default) -->
+<div class="card" id="um-add-card" style="max-width:720px;display:none;margin-bottom:16px">
   <div class="card-header">
-    <h3>Add New User</h3>
+    <h3 style="font-size:15px">Add New User</h3>
+    <button class="btn btn-ghost btn-sm" id="um-add-cancel">&#10005; Cancel</button>
   </div>
-  <form id="user-add-form" class="master-form">
+  <form id="user-add-form">
     <div class="form-row">
       <div class="form-group">
         <label for="new-username">Username <span class="required">*</span></label>
-        <input type="text" id="new-username" placeholder="e.g. john" autocomplete="off" />
+        <input type="text" id="new-username" placeholder="e.g. ravi_op" autocomplete="off" />
       </div>
       <div class="form-group">
         <label for="new-password">Password <span class="required">*</span></label>
@@ -21,36 +25,64 @@
       <div class="form-group">
         <label for="new-level">Level <span class="required">*</span></label>
         <select id="new-level">
-          <option value="user">User</option>
+          <option value="user">Operator (User)</option>
           <option value="admin">Administrator</option>
         </select>
       </div>
     </div>
-    <div class="form-actions">
-      <button type="submit" class="btn btn-primary">Add User</button>
+
+    <!-- Superadmin: mandi assignment -->
+    <div id="new-mandi-group" class="hidden">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px">&#127978; Assign to Mandi</div>
+      <div id="new-mandi-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
+    </div>
+
+    <!-- Admin notice -->
+    <div id="admin-mandi-notice" class="hidden" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:10px 14px;font-size:13px;color:#166534;margin-bottom:12px">
+      &#10004; This user will be assigned to: <strong id="admin-mandi-notice-name"></strong>
+    </div>
+
+    <!-- Permissions (shown for non-superadmin level) -->
+    <div id="new-perms-section" class="hidden">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px">&#128274; Feature Permissions <span style="font-weight:400;color:var(--text-muted);font-size:12px">(leave all on for defaults)</span></div>
+      <div id="new-perms-grid" class="perms-grid"></div>
+    </div>
+
+    <div id="um-add-error" class="alert alert-error hidden" style="margin-top:10px"></div>
+    <div style="margin-top:14px;display:flex;gap:10px">
+      <button type="submit" class="btn btn-primary" id="um-add-submit">Add User</button>
+      <button type="button" class="btn btn-ghost" id="um-add-cancel2">Cancel</button>
     </div>
   </form>
 </div>
 
-<!-- User List -->
+<!-- Users Table -->
 <div class="card">
   <div class="card-header">
-    <h3>All Users</h3>
-    <span class="badge" id="user-count">0 users</span>
+    <div style="display:flex;align-items:center;gap:10px">
+      <h3>Users</h3>
+      <span class="badge" id="user-count">0</span>
+    </div>
+    <!-- Filter for superadmin -->
+    <select id="um-filter-mandi" class="hidden" style="border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:13px;background:#fff;color:var(--text)">
+      <option value="">All Mandis</option>
+    </select>
   </div>
   <div class="table-wrapper">
     <table class="data-table">
       <thead>
         <tr>
-          <th>#</th>
+          <th style="width:40px">#</th>
           <th>Username</th>
-          <th style="width:110px">Level</th>
-          <th style="width:160px">Created</th>
-          <th style="width:120px">Actions</th>
+          <th style="width:120px">Level</th>
+          <th id="um-mandi-th" class="hidden">Mandi(s)</th>
+          <th id="um-perms-th" class="hidden" style="width:180px">Permissions</th>
+          <th style="width:110px">Created</th>
+          <th style="width:130px">Actions</th>
         </tr>
       </thead>
       <tbody id="user-tbody">
-        <tr class="empty-row"><td colspan="5">No users found</td></tr>
+        <tr class="empty-row"><td colspan="6">No users found</td></tr>
       </tbody>
     </table>
   </div>

@@ -67,6 +67,15 @@
             <a href="#" class="nav-item hidden" data-page="user-management" id="nav-user-management">
               <span class="nav-dot"></span> User Management
             </a>
+            <a href="#" class="nav-item hidden" data-page="mandi-profile" id="nav-mandi-profile">
+              <span class="nav-dot"></span> Mandi Profile
+            </a>
+            <a href="#" class="nav-item hidden" data-page="mandi-management" id="nav-mandi-management">
+              <span class="nav-dot"></span> Mandi Management
+            </a>
+            <a href="#" class="nav-item hidden" data-page="admin-sql" id="nav-admin-sql">
+              <span class="nav-dot"></span> Database Viewer
+            </a>
           </div>
         </div>
 
@@ -78,10 +87,10 @@
             <span class="nav-chevron">&#8250;</span>
           </div>
           <div class="nav-group-items" id="menu-entry">
-            <a href="#" class="nav-item" data-page="gate-pass">
+            <a href="#" class="nav-item" data-page="gate-pass" data-perm="gate_pass">
               <span class="nav-dot"></span> Gate Pass Entry
             </a>
-            <a href="#" class="nav-item" data-page="rate-entry">
+            <a href="#" class="nav-item" data-page="rate-entry" data-perm="rate_entry">
               <span class="nav-dot"></span> Daily Rate Entry
             </a>
           </div>
@@ -95,19 +104,19 @@
             <span class="nav-chevron">&#8250;</span>
           </div>
           <div class="nav-group-items" id="menu-reports">
-            <a href="#" class="nav-item" data-page="report-gatepass">
+            <a href="#" class="nav-item" data-page="report-gatepass" data-perm="reports">
               <span class="nav-dot"></span> Gate Pass Wise
             </a>
-            <a href="#" class="nav-item" data-page="report-commodity">
+            <a href="#" class="nav-item" data-page="report-commodity" data-perm="reports">
               <span class="nav-dot"></span> Commodity Wise
             </a>
-            <a href="#" class="nav-item" data-page="report-arrival">
+            <a href="#" class="nav-item" data-page="report-arrival" data-perm="reports">
               <span class="nav-dot"></span> Commodity State Wise
             </a>
-            <a href="#" class="nav-item" data-page="report-cash">
+            <a href="#" class="nav-item" data-page="report-cash" data-perm="reports">
               <span class="nav-dot"></span> Cash Report
             </a>
-            <a href="#" class="nav-item" data-page="report-shopwise">
+            <a href="#" class="nav-item" data-page="report-shopwise" data-perm="reports">
               <span class="nav-dot"></span> Shop Wise Report
             </a>
             <a href="#" class="nav-item hidden" data-page="report-ledger" id="nav-report-ledger">
@@ -123,6 +132,7 @@
       <!-- Top Header -->
       <header class="top-header">
         <button class="sidebar-toggle" id="sidebar-toggle" title="Toggle sidebar">&#9776;</button>
+        <button class="home-btn" id="home-btn" title="Go to Dashboard">&#8962;</button>
         <div class="header-title" id="page-title">Dashboard</div>
         <div class="header-user">
           <div class="user-menu-wrap" id="user-menu-wrap">
@@ -147,6 +157,20 @@
         </div>
       </header>
 
+      <!-- Global mandi context bar (superadmin + multi-mandi admins) -->
+      <div id="context-bar" class="context-bar hidden">
+        <span class="context-bar-icon">&#127978;</span>
+        <span class="context-bar-label">Working in:</span>
+        <select id="context-mandi-select" class="context-mandi-select">
+          <option value="">— Select a mandi —</option>
+        </select>
+        <span id="context-fy-badge" class="context-fy-badge hidden"></span>
+        <span id="context-fy-selector-wrap" class="context-fy-selector-wrap hidden">
+          <span class="context-bar-label" style="margin-left:8px">Viewing FY:</span>
+          <select id="context-fy-selector" class="context-mandi-select" style="min-width:140px"></select>
+        </span>
+      </div>
+
       <!-- Page Content (fragments are injected here at startup by main.js) -->
       <main class="page-content" id="page-content"></main>
     </div>
@@ -165,6 +189,82 @@
         <button class="btn btn-danger" id="confirm-yes">Delete</button>
         <button class="btn btn-ghost" id="confirm-no">Cancel</button>
       </div>
+    </div>
+  </div>
+
+  <!-- NEW FINANCIAL YEAR MODAL -->
+  <div id="new-fy-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-icon" style="color:var(--primary)">&#128197;</div>
+      <h3>Start New Financial Year</h3>
+      <p style="margin-bottom:18px;color:var(--text-muted);font-size:13px">A new database will be created for the new financial year. Gate pass numbers will restart from 1. Provide admin credentials to confirm.</p>
+      <form id="new-fy-form">
+        <div class="form-group" style="margin-bottom:10px;text-align:left">
+          <label>Admin Username</label>
+          <input type="text" id="fy-username" placeholder="Admin username" autocomplete="off" />
+        </div>
+        <div class="form-group" style="margin-bottom:14px;text-align:left">
+          <label>Admin Password</label>
+          <input type="password" id="fy-password" placeholder="Admin password" autocomplete="off" />
+        </div>
+        <div id="fy-error" class="alert alert-error hidden" style="margin-bottom:10px"></div>
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-primary">Confirm &amp; Start New FY</button>
+          <button type="button" class="btn btn-ghost" id="fy-cancel">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- DEVICE SETUP MODAL (first-time per device) -->
+  <div id="device-setup-modal" class="modal-overlay hidden">
+    <div class="modal" style="max-width:400px;text-align:left">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:36px">🖥️</div>
+        <h3 style="margin:8px 0 4px">Welcome! First-Time Setup</h3>
+        <p id="ds-mandi-info" style="color:var(--primary);font-size:13px;font-weight:600;display:none;margin:0"></p>
+      </div>
+
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:12px;color:#1e40af;line-height:1.6">
+        <strong>This device needs a gate number.</strong><br>
+        Each computer or tablet at a gate is assigned a gate number (1–9).<br>
+        Gate passes created on this device will be numbered using your gate number.<br>
+        <span style="color:#64748b">This is saved locally and only needs to be set once.</span>
+      </div>
+
+      <div class="form-group" style="margin-bottom:6px">
+        <label>Gate Number for this device <span style="color:var(--danger)">*</span></label>
+        <input type="number" id="ds-gate-number" min="1" max="9" step="1" placeholder="e.g. 1" style="max-width:120px" />
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Ask your admin which gate number to use (1–9).</div>
+      </div>
+      <div id="ds-error" class="alert alert-error hidden" style="margin-bottom:10px"></div>
+      <div class="modal-actions" style="justify-content:center">
+        <button type="button" class="btn btn-primary" id="ds-save-btn">✓ Save &amp; Start Working</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN AUTH MODAL (gate pass override) -->
+  <div id="admin-auth-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-icon" style="color:var(--warning)">&#9888;</div>
+      <h3>Admin Authorisation Required</h3>
+      <p id="admin-auth-msg" style="margin-bottom:18px;color:var(--text-muted)"></p>
+      <form id="admin-auth-form">
+        <div class="form-group" style="margin-bottom:10px;text-align:left">
+          <label>Admin Username</label>
+          <input type="text" id="aa-username" placeholder="Admin username" autocomplete="off" />
+        </div>
+        <div class="form-group" style="margin-bottom:14px;text-align:left">
+          <label>Admin Password</label>
+          <input type="password" id="aa-password" placeholder="Admin password" autocomplete="off" />
+        </div>
+        <div id="aa-error" class="alert alert-error hidden" style="margin-bottom:10px"></div>
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-warning">Confirm &amp; Proceed</button>
+          <button type="button" class="btn btn-ghost" id="aa-cancel">Cancel</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -267,6 +367,7 @@
        core → auth/navigation → tab modules → main (entry)
        ============================================================ -->
   <script src="js/core.js"></script>
+  <script src="js/dashboard.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/navigation.js"></script>
   <script src="js/commodity.js"></script>
@@ -277,6 +378,159 @@
   <script src="js/userManagement.js"></script>
   <script src="js/reports.js"></script>
   <script src="js/rates.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/adminSql.js"></script>
+  <script src="js/deviceSetup.js"></script>
+  <script src="js/mandiManagement.js"></script>
   <script src="js/main.js"></script>
+
+  <!-- EDIT USER MODAL (superadmin: mandi assignments + permissions) -->
+  <div id="edit-user-modal" class="modal-overlay hidden" style="align-items:flex-start;padding-top:40px">
+    <div class="modal" style="max-width:560px;width:95%;text-align:left;padding:0;overflow:hidden">
+      <div style="background:var(--primary);color:#fff;padding:16px 22px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:15px;font-weight:700" id="eu-modal-title">Edit User</div>
+          <div style="font-size:12px;opacity:.8;margin-top:2px" id="eu-modal-subtitle"></div>
+        </div>
+        <button id="eu-close" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;opacity:.8">&#10005;</button>
+      </div>
+      <div style="padding:20px;max-height:70vh;overflow-y:auto">
+        <input type="hidden" id="eu-user-id" />
+
+        <!-- Mandi Assignment -->
+        <div id="eu-mandi-section">
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+            &#127978; Mandi Assignment
+          </div>
+          <div id="eu-mandi-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:18px;max-height:160px;overflow-y:auto;padding:2px"></div>
+        </div>
+
+        <!-- Permissions -->
+        <div id="eu-perms-section">
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">&#128274; Feature Permissions</div>
+          <div id="eu-perms-grid" class="perms-grid"></div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:8px">Superadmin always has full access regardless of these settings.</div>
+        </div>
+
+        <!-- Reset Password -->
+        <div style="border-top:1px solid var(--border);margin-top:18px;padding-top:16px">
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">&#128273; Reset Password</div>
+          <div class="form-row" style="gap:10px">
+            <div class="form-group" style="flex:1">
+              <label>New Password</label>
+              <input type="password" id="eu-pwd-new" placeholder="Min 6 characters" autocomplete="new-password" />
+            </div>
+            <div class="form-group" style="flex:1">
+              <label>Confirm Password</label>
+              <input type="password" id="eu-pwd-confirm" placeholder="Repeat password" />
+            </div>
+          </div>
+          <div id="eu-pwd-error" class="alert alert-error hidden" style="margin-top:6px"></div>
+          <button class="btn btn-ghost btn-sm" id="eu-reset-pwd-btn" style="margin-top:8px">Reset Password</button>
+        </div>
+      </div>
+      <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;background:#fafafa">
+        <button class="btn btn-ghost btn-sm" id="eu-cancel">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="eu-save">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FY CREATION WIZARD MODAL -->
+  <div id="fy-wizard-modal" class="modal-overlay hidden" style="align-items:flex-start;padding-top:40px">
+    <div class="modal" style="max-width:520px;width:95%;text-align:left;padding:0;overflow:hidden">
+      <!-- Header -->
+      <div style="background:var(--primary);color:#fff;padding:18px 22px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:16px;font-weight:700">📅 New Financial Year</div>
+          <div style="font-size:12px;opacity:.85;margin-top:2px" id="fy-wiz-mandi-label"></div>
+        </div>
+        <button id="fy-wiz-close" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;opacity:.8">✕</button>
+      </div>
+
+      <!-- Step 1: Date range + preview -->
+      <div id="fy-wiz-step1" style="padding:22px">
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.5">
+          Each financial year gets its own isolated database. Master data (commodities, traders, vehicle types) will be <strong>copied</strong> from the current FY. Gate pass numbers restart from 1.
+        </div>
+
+        <div class="form-row" style="gap:12px;margin-bottom:16px">
+          <div class="form-group" style="flex:1;margin-bottom:0">
+            <label>From Date <span style="color:var(--danger)">*</span></label>
+            <input type="date" id="fy-wiz-from" />
+          </div>
+          <div class="form-group" style="flex:1;margin-bottom:0">
+            <label>To Date <span style="color:var(--danger)">*</span></label>
+            <input type="date" id="fy-wiz-to" />
+          </div>
+        </div>
+
+        <!-- Preview box -->
+        <div id="fy-wiz-preview" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px">
+          <div style="font-weight:600;color:#166534;margin-bottom:8px">📋 Will be copied from current FY:</div>
+          <div id="fy-wiz-preview-body" style="color:#15803d">Loading…</div>
+        </div>
+
+        <div id="fy-wiz-error" class="alert alert-error hidden" style="margin-bottom:12px"></div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button class="btn btn-ghost" id="fy-wiz-cancel">Cancel</button>
+          <button class="btn btn-primary" id="fy-wiz-start">✓ Start Financial Year</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Loading -->
+      <div id="fy-wiz-step2" class="hidden" style="padding:40px 22px;text-align:center">
+        <div style="font-size:32px;margin-bottom:12px">⏳</div>
+        <div style="font-size:15px;font-weight:600;color:var(--primary)">Creating financial year database…</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:6px">Copying master data from previous FY. Please wait.</div>
+      </div>
+
+      <!-- Step 3: Success -->
+      <div id="fy-wiz-step3" class="hidden" style="padding:22px">
+        <div style="text-align:center;margin-bottom:18px">
+          <div style="font-size:40px">✅</div>
+          <div style="font-size:16px;font-weight:700;color:var(--primary);margin-top:8px">Financial Year Created!</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:4px" id="fy-wiz-success-label"></div>
+        </div>
+
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px" id="fy-wiz-copied-box"></div>
+
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px">
+          <div style="font-weight:600;color:#1e40af;margin-bottom:8px">📌 What to do next:</div>
+          <div style="color:#1d4ed8;line-height:1.7">
+            1. Operators can now create gate passes within the new date range.<br>
+            2. Add daily commodity rates under <strong>Daily Rate Entry</strong>.<br>
+            3. Check past data by switching to the old FY in Financial Years.
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end">
+          <button class="btn btn-primary" id="fy-wiz-done">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELETE FY CONFIRM MODAL -->
+  <div id="del-fy-modal" class="modal-overlay hidden">
+    <div class="modal" style="max-width:420px">
+      <div class="modal-icon" style="color:var(--danger)">⚠</div>
+      <h3>Delete Financial Year</h3>
+      <p id="del-fy-label" style="color:var(--text-muted);font-size:13px;margin-bottom:16px"></p>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:10px 12px;font-size:12px;color:#991b1b;margin-bottom:16px">
+        ⚠ This will permanently drop the FY database and delete all gate pass records for that year. This cannot be undone.
+      </div>
+      <div class="form-group" style="margin-bottom:8px;text-align:left">
+        <label style="font-size:13px">Superadmin Password <span style="color:var(--danger)">*</span></label>
+        <input type="password" id="del-fy-pwd" placeholder="Enter superadmin password" autocomplete="off" />
+      </div>
+      <div id="del-fy-error" class="alert alert-error hidden" style="margin-bottom:10px"></div>
+      <div class="modal-actions">
+        <button class="btn btn-danger" id="del-fy-confirm">Delete Permanently</button>
+        <button class="btn btn-ghost" id="del-fy-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

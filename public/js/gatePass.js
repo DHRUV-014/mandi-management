@@ -96,16 +96,65 @@ function createAutocomplete(wrap, items, { filterFn, displayFn, renderItemHTML, 
 
 // ── Load / reset the Gate Pass page ───────────────────────
 async function loadGatePassPage() {
-  const [tradersRes, commoditiesRes, nextRes, vehicleRes, statesRes] = await Promise.all([
+  // Superadmin with no mandi context selected
+  if (state.user?.level === 'superadmin' && !state.user?.current_mandi_id) {
+    showNoMandiNotice('page-gate-pass');
+    return;
+  }
+
+  // Show mandi info banner
+  const mandiInfo = document.getElementById('gp-mandi-info');
+  const activeMandi = state.user?.current_mandi_id
+    ? { name: state.user.mandi_name, prefix: state.user.mandi_prefix }
+    : { name: state.user?.mandi_name, prefix: state.user?.mandi_prefix };
+
+  if (mandiInfo) {
+    if (activeMandi.name) {
+      mandiInfo.innerHTML = `<span style="color:var(--primary);font-weight:600">${escapeHtml(activeMandi.name)}</span> <span style="color:var(--text-muted);font-size:12px">[${escapeHtml(activeMandi.prefix || '')}]</span>`;
+      mandiInfo.style.display = '';
+    } else {
+      mandiInfo.innerHTML = `<span style="color:var(--danger)">&#9888; Your account is not assigned to any mandi. Contact superadmin.</span>`;
+      mandiInfo.style.display = '';
+    }
+  }
+
+  // Hide/show form for unassigned accounts
+  const gateForm = document.getElementById('gp-entry-form-area');
+  if (!state.user?.mandi_id && !state.user?.current_mandi_id) {
+    if (gateForm) gateForm.style.display = 'none';
+    return;
+  }
+  if (gateForm) gateForm.style.display = '';
+
+  const gate = getGateNumber();
+  const isSA = state.user?.level === 'superadmin';
+  const ctxMandiId = state.user?.current_mandi_id;
+
+  const [tradersRes, commoditiesRes, nextRes, vehicleRes, statesRes, mineRes] = await Promise.all([
     api('GET', '/api/traders'),
     api('GET', '/api/commodities'),
-    api('GET', '/api/gate-pass/next-number'),
+    api('GET', `/api/gate-pass/next-number?gate=${gate}`),
     api('GET', '/api/vehicle-types'),
     api('GET', '/api/states/all'),
+    isSA && ctxMandiId
+      ? api('GET', `/api/mandis/${ctxMandiId}/financial-years`)
+      : api('GET', '/api/mandis/mine'),
   ]);
 
-  if (!tradersRes.ok || !commoditiesRes.ok || !nextRes.ok) {
-    showToast('Failed to load gate pass data', 'error');
+  if (!tradersRes.ok || !commoditiesRes.ok) {
+    const errMsg = tradersRes.data?.error || commoditiesRes.data?.error || '';
+    if (errMsg.includes('financial year')) {
+      const gf = document.getElementById('gp-entry-form-area');
+      if (gf) gf.innerHTML = `<div style="padding:32px;text-align:center;color:var(--danger)">&#9888; No active financial year configured. Ask the superadmin to set one up.</div>`;
+    } else {
+      showToast('Failed to load gate pass data', 'error');
+    }
+    return;
+  }
+
+  if (!nextRes.ok) {
+    const gf = document.getElementById('gp-entry-form-area');
+    if (gf) gf.innerHTML = `<div style="padding:32px;text-align:center;color:var(--danger)">&#9888; ${nextRes.data?.error || 'No active financial year. Ask superadmin to start one.'}</div>`;
     return;
   }
 
@@ -114,8 +163,33 @@ async function loadGatePassPage() {
   gpState.vehicleTypes = vehicleRes.ok ? vehicleRes.data : [];
   gpState.stateCodes   = statesRes.ok  ? statesRes.data  : [];
 
-  document.getElementById('gp-number').value = nextRes.data.next;
-  document.getElementById('gp-date').value = todayISO();
+  // Lock date input to active FY range
+  const dateInput = document.getElementById('gp-date');
+  // For superadmin: parse from /financial-years response; for admin: parse from /mine
+  let fyMandi = null;
+  if (isSA && ctxMandiId && mineRes.ok) {
+    const fyList = mineRes.data.financial_years || [];
+    const activeFY = mineRes.data.active_fy;
+    fyMandi = fyList.find(f => f.code === activeFY) || null;
+  } else if (!isSA && mineRes.ok) {
+    fyMandi = mineRes.data.mandi;
+  }
+  if (fyMandi?.from_date && fyMandi?.to_date) {
+    const fyFrom = String(fyMandi.from_date).slice(0, 10);
+    const fyTo   = String(fyMandi.to_date).slice(0, 10);
+    dateInput.min = fyFrom;
+    dateInput.max = fyTo;
+    const today = todayISO();
+    dateInput.value = today < fyFrom ? fyFrom : today > fyTo ? fyTo : today;
+    // Show FY range hint
+    if (mandiInfo) {
+      mandiInfo.innerHTML += ` <span style="color:var(--text-muted);font-size:11px;margin-left:8px">FY: ${fyFrom} → ${fyTo}</span>`;
+    }
+  } else {
+    dateInput.removeAttribute('min');
+    dateInput.removeAttribute('max');
+    dateInput.value = todayISO();
+  }
   document.getElementById('gp-time').value = nowHM();
 
   document.getElementById('gp-vehicle-number').value = '';
@@ -135,6 +209,9 @@ async function loadGatePassPage() {
   tbody.innerHTML = '';
   gpState.rowSeq = 0;
   gpAddRow();
+
+  // Set the pre-fetched next gate pass number
+  document.getElementById('gp-number').value = nextRes.data?.next || '';
 
   loadGatePassList();
 }
@@ -516,6 +593,7 @@ async function gpSaveGatePass(action) {
     state_code,
     state_name,
     builty_no,
+    gate_number: getGateNumber(),
   });
 
   allBtns.forEach(b => { b.disabled = false; b.innerHTML = b.dataset.origHtml; });
@@ -541,7 +619,7 @@ async function gpSaveGatePass(action) {
 }
 
 async function gpResetForm() {
-  const { ok, data } = await api('GET', '/api/gate-pass/next-number');
+  const { ok, data } = await api('GET', `/api/gate-pass/next-number?gate=${getGateNumber()}`);
 
   document.getElementById('gp-date').value = todayISO();
   document.getElementById('gp-date').classList.remove('error');
@@ -606,7 +684,7 @@ function renderGatePassList(passes) {
       <td><span class="badge">${p.item_count} item${p.item_count !== 1 ? 's' : ''}</span></td>
       <td class="actions-cell">
         <button class="btn btn-icon" onclick="viewGatePass(${p.id})" title="View items">&#128065;</button>
-        <button class="btn btn-icon delete" onclick="deleteGatePass(${p.id}, ${p.gate_pass_number})" title="Delete">&#128465;</button>
+        <button class="btn btn-icon delete gp-delete-btn" onclick="deleteGatePass(${p.id}, '${p.gate_pass_number}')" title="Delete">&#128465;</button>
       </td>
     </tr>
     `;
@@ -897,8 +975,8 @@ function generateGatePassHTML(data) {
 </head><body>
 <div class="print-page">
   <div class="print-header">
-    <h1>MANDI MANAGEMENT SYSTEM</h1>
-    <div class="subtitle">Gate Pass Receipt</div>
+    ${getProfileHeader()}
+    <div class="subtitle" style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:2px;margin-top:4px">Gate Pass Receipt</div>
     <div class="gp-badge">Gate Pass #${data.gate_pass_number}</div>
   </div>
 
@@ -957,9 +1035,7 @@ function generateGatePassHTML(data) {
     <div class="sig-block"><div class="sig-line">Authority Signature</div></div>
   </div>
 
-  <div class="print-footer">
-    Generated from Mandi Management System &middot; ${new Date().toLocaleDateString('en-IN')}
-  </div>
+  <div class="print-footer">${getProfileFooter()}</div>
 </div>
 </body></html>`;
 }
@@ -972,6 +1048,27 @@ function initGatePassModule() {
     input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     try { input.setSelectionRange(caret, caret); } catch (_) {}
     gpUpdateStateFromVehicle();
+  });
+
+  // State field: allow manual override, sync dataset for save
+  document.getElementById('gp-state-display').addEventListener('input', (e) => {
+    const val = e.target.value.trim().toUpperCase();
+    e.target.value = val;
+    const match = gpState.stateCodes.find(s => s.state_code.toUpperCase() === val || s.state_name.toUpperCase() === val);
+    if (match) {
+      e.target.dataset.code = match.state_code;
+      e.target.dataset.name = match.state_name;
+      e.target.value = `${match.state_code} — ${match.state_name}`;
+      e.target.classList.remove('state-unknown');
+    } else if (val) {
+      e.target.dataset.code = val;
+      e.target.dataset.name = val;
+      e.target.classList.add('state-unknown');
+    } else {
+      delete e.target.dataset.code;
+      delete e.target.dataset.name;
+      e.target.classList.remove('state-unknown');
+    }
   });
 
   document.getElementById('gp-vehicle-type').addEventListener('change', (e) => {
@@ -1095,16 +1192,16 @@ function initGatePassModule() {
   async function gpSearchByNumber() {
     const input = document.getElementById('gp-search-input');
     const errorEl = document.getElementById('gp-search-error');
-    const num = parseInt(input.value, 10);
+    const num = input.value.trim();
     errorEl.style.display = 'none';
-    if (!num || num <= 0) {
-      errorEl.textContent = 'Please enter a valid gate pass number';
+    if (!num) {
+      errorEl.textContent = 'Please enter a gate pass number';
       errorEl.style.display = '';
       return;
     }
-    const { ok, data } = await api('GET', `/api/gate-pass/search?num=${num}`);
+    const { ok, data } = await api('GET', `/api/gate-pass/search?num=${encodeURIComponent(num)}`);
     if (!ok) {
-      errorEl.textContent = data.error || `Gate Pass #${num} not found`;
+      errorEl.textContent = data.error || `Gate Pass ${num} not found`;
       errorEl.style.display = '';
       return;
     }

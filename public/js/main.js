@@ -19,6 +19,9 @@ const PAGE_LIST = [
   'report-shopwise',
   'report-ledger',
   'user-management',
+  'mandi-profile',
+  'mandi-management',
+  'admin-sql',
 ];
 
 (async function bootstrap() {
@@ -50,8 +53,12 @@ const PAGE_LIST = [
     initUserManagementModule();
     initReportsModule();
     initRatesModule();
+    initProfileModule();
+    initMandiManagementModule();
+    initDeviceSetupModule();
 
-    // Check existing session (shows login or app)
+    // Load profile then check session
+    await loadMandiProfile();
     checkSession();
   } catch (err) {
     console.error('Bootstrap failed:', err);
