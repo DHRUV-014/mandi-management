@@ -17,6 +17,7 @@ router.get('/gate-pass', requireAuth, requireFYDB, async (req, res) => {
     const [rows] = await req.fyDbRead.execute(`
       SELECT
         DATE(gp.created_at)  AS date,
+        gp.created_at        AS created_at,
         gp.gate_pass_number,
         gp.vehicle_number,
         c.name               AS commodity_name,
@@ -27,7 +28,7 @@ router.get('/gate-pass', requireAuth, requireFYDB, async (req, res) => {
       JOIN gate_passes gp ON gp.id = gpi.gate_pass_id
       JOIN commodities c  ON c.id  = gpi.commodity_id
       WHERE DATE(gp.created_at) BETWEEN ? AND ?
-      ORDER BY gp.gate_pass_number, c.name
+      ORDER BY gp.created_at, gp.gate_pass_number, c.name
     `, [range.from, range.to]);
     res.json({ items: rows });
   } catch (err) {
@@ -51,6 +52,7 @@ router.get('/shop-gate-pass', requireAuth, requireFYDB, async (req, res) => {
         t.shop_number,
         t.trader_name,
         DATE(gp.created_at)                                               AS date,
+        gp.created_at                                                     AS created_at,
         gp.gate_pass_number,
         gp.vehicle_number,
         c.name                                                            AS commodity_name,
@@ -69,7 +71,7 @@ router.get('/shop-gate-pass', requireAuth, requireFYDB, async (req, res) => {
             AND cr.date = DATE(gp.created_at)
       WHERE DATE(gp.created_at) BETWEEN ? AND ?
       ${shopFilter}
-      ORDER BY t.shop_number, gp.gate_pass_number, c.name
+      ORDER BY t.shop_number, gp.created_at, gp.gate_pass_number, c.name
     `, params);
 
     const shopMap = new Map();
@@ -80,6 +82,7 @@ router.get('/shop-gate-pass', requireAuth, requireFYDB, async (req, res) => {
       const shop = shopMap.get(row.shop_number);
       shop.entries.push({
         date:             row.date,
+        created_at:       row.created_at,
         gate_pass_number: row.gate_pass_number,
         commodity_name:   row.commodity_name,
         number_of_bags:   row.number_of_bags,
@@ -114,28 +117,20 @@ router.get('/commodity', requireAuth, requireFYDB, async (req, res) => {
         COUNT(DISTINCT gp.id)                                               AS gate_pass_count,
         COUNT(DISTINCT gpi.trader_id)                                       AS trader_count,
         SUM(gpi.number_of_bags)                                             AS total_bags,
-        ROUND(SUM(gpi.number_of_bags * gpi.weight_per_bag), 2)             AS total_weight,
-        gpi.unit,
-        ROUND(AVG(cr.rate), 2)                                              AS avg_rate,
-        ROUND(SUM(gpi.number_of_bags * gpi.weight_per_bag * cr.rate), 2)   AS total_value
+        gpi.weight_per_bag                                                  AS weight_per_bag,
+        ROUND(SUM(gpi.number_of_bags * gpi.weight_per_bag), 2)             AS total_weight
       FROM gate_pass_items gpi
       JOIN gate_passes gp ON gp.id = gpi.gate_pass_id
       JOIN commodities c  ON c.id  = gpi.commodity_id
-      LEFT JOIN commodity_rates cr
-             ON cr.commodity_id = gpi.commodity_id
-            AND cr.date = DATE(gp.created_at)
       WHERE DATE(gp.created_at) BETWEEN ? AND ?
-      GROUP BY c.id, gpi.unit
-      ORDER BY total_weight DESC
+      GROUP BY c.id, gpi.weight_per_bag
+      ORDER BY c.name, gpi.weight_per_bag
     `, [range.from, range.to]);
 
     const summary = {
       total_commodities: new Set(commodities.map(c => c.id)).size,
-      total_bags:        commodities.reduce((s, c) => s + (c.total_bags    || 0), 0),
-      total_weight:      Math.round(commodities.reduce((s, c) => s + (c.total_weight || 0), 0) * 100) / 100,
-      total_value:       commodities.some(c => c.total_value != null)
-        ? Math.round(commodities.reduce((s, c) => s + (c.total_value || 0), 0) * 100) / 100
-        : null,
+      total_bags:        commodities.reduce((s, c) => s + Number(c.total_bags   || 0), 0),
+      total_weight:      Math.round(commodities.reduce((s, c) => s + Number(c.total_weight || 0), 0) * 100) / 100,
     };
     res.json({ commodities, summary });
   } catch (err) {
@@ -155,14 +150,15 @@ router.get('/total-arrival', requireAuth, requireFYDB, async (req, res) => {
         c.name                                                     AS commodity_name,
         c.short_name,
         COALESCE(NULLIF(gp.state_name, ''), 'Unknown')            AS state_name,
-        gpi.unit,
+        SUM(gpi.number_of_bags)                                   AS total_bags,
+        gpi.weight_per_bag                                        AS weight_per_bag,
         ROUND(SUM(gpi.number_of_bags * gpi.weight_per_bag), 2)   AS total_weight
       FROM gate_pass_items gpi
       JOIN gate_passes gp ON gp.id  = gpi.gate_pass_id
       JOIN commodities c  ON c.id   = gpi.commodity_id
       WHERE DATE(gp.created_at) BETWEEN ? AND ?
-      GROUP BY c.id, gp.state_name, gpi.unit
-      ORDER BY c.name, state_name
+      GROUP BY c.id, gp.state_name, gpi.weight_per_bag
+      ORDER BY c.name, state_name, gpi.weight_per_bag
     `, [range.from, range.to]);
 
     const commodityMap = new Map();
@@ -171,14 +167,22 @@ router.get('/total-arrival', requireAuth, requireFYDB, async (req, res) => {
       if (!commodityMap.has(key)) {
         commodityMap.set(key, { commodity_name: key, short_name: row.short_name, states: [] });
       }
-      commodityMap.get(key).states.push({ state_name: row.state_name, unit: row.unit, total_weight: row.total_weight });
+      commodityMap.get(key).states.push({
+        state_name:     row.state_name,
+        total_bags:     row.total_bags,
+        weight_per_bag: row.weight_per_bag,
+        total_weight:   row.total_weight,
+      });
     }
 
     const commodities = [...commodityMap.values()].map(c => ({
       ...c,
-      grand_total: Math.round(c.states.reduce((s, r) => s + (r.total_weight || 0), 0) * 100) / 100,
+      grand_total: Math.round(c.states.reduce((s, r) => s + Number(r.total_weight || 0), 0) * 100) / 100,
     }));
-    res.json({ commodities });
+    const overall_total = Math.round(
+      commodities.reduce((s, c) => s + Number(c.grand_total || 0), 0) * 100
+    ) / 100;
+    res.json({ commodities, overall_total });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to generate report' });
@@ -296,6 +300,7 @@ router.get('/ledger', requireAdmin, requireFYDB, async (req, res) => {
         t.trader_name,
         t.shop_number,
         DATE(gp.created_at)                                       AS date,
+        gp.created_at                                             AS created_at,
         gp.gate_pass_number,
         gp.vehicle_number,
         c.name                                                    AS commodity_name,
@@ -317,6 +322,7 @@ router.get('/ledger', requireAdmin, requireFYDB, async (req, res) => {
         CAST(SUBSTRING(t.shop_number, IFNULL(NULLIF(LOCATE('-', t.shop_number), 0), 0) + 1) AS UNSIGNED),
         t.shop_number,
         date,
+        gp.created_at,
         gp.gate_pass_number,
         c.name
     `, params);
@@ -358,6 +364,7 @@ router.get('/ledger', requireAdmin, requireFYDB, async (req, res) => {
 
       dayEntry.items.push({
         gate_pass_number: row.gate_pass_number,
+        created_at:       row.created_at,
         vehicle_number:   row.vehicle_number || '—',
         commodity_name:   row.commodity_name,
         unit:             row.unit,

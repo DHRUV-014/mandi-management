@@ -276,9 +276,121 @@ async function reloadCurrentContext() {
   try { await loadMandiProfile(); } catch (_) {}
   try { await updateContextFYBadge(); } catch (_) {}
   try { await refreshFYSelector(); } catch (_) {}
+  try { await refreshFYBounds(); } catch (_) {}
   if (typeof navigateTo === 'function' && state.currentPage) {
     navigateTo(state.currentPage);
   }
+}
+
+// Refresh the global mandi list (context bar dropdown + dashboard cards) without
+// reloading the current page. Called after mandi add/edit/delete from Mandi Management.
+async function refreshMandiListEverywhere() {
+  try { if (typeof initContextBar === 'function') await initContextBar(); } catch (_) {}
+  try { if (typeof loadDashboard === 'function') await loadDashboard(); } catch (_) {}
+  try { await refreshFYSelector(); } catch (_) {}
+  try { await updateContextFYBadge(); } catch (_) {}
+  try { await refreshFYBounds(); } catch (_) {}
+}
+
+/* ============================================================
+   FY date-range clamping
+   Every <input type="date"> gets min/max set to the currently-viewed
+   FY's from_date / to_date. Out-of-range input is rejected inline.
+   ============================================================ */
+
+state.fyBounds = { from: null, to: null, label: null, code: null };
+
+async function refreshFYBounds() {
+  // If there's no mandi context, clear bounds
+  const mandiId = state.user?.current_mandi_id || state.user?.mandi_id;
+  if (!state.user || !mandiId) {
+    state.fyBounds = { from: null, to: null, label: null, code: null };
+    applyFYBoundsToInputs();
+    return;
+  }
+  try {
+    const { ok, data } = await api('GET', '/api/fy/list');
+    if (!ok) return;
+    // The effective FY is the one currently being viewed (selected_fy) or the active one.
+    const effective = data.selected_fy || data.active_fy;
+    const fy = data.financial_years?.find(f => f.code === effective);
+    if (fy && fy.from_date && fy.to_date) {
+      state.fyBounds = {
+        from:  String(fy.from_date).slice(0, 10),
+        to:    String(fy.to_date).slice(0, 10),
+        label: fy.fy_label || fy.code,
+        code:  fy.code,
+      };
+    } else {
+      state.fyBounds = { from: null, to: null, label: null, code: null };
+    }
+  } catch (_) { /* leave bounds as-is */ }
+  applyFYBoundsToInputs();
+}
+
+function applyFYBoundsToInputs() {
+  const b = state.fyBounds;
+  document.querySelectorAll('input[type="date"]').forEach(input => {
+    if (b && b.from && b.to) {
+      input.min = b.from;
+      input.max = b.to;
+      input.dataset.fyClamped = '1';
+    } else {
+      input.removeAttribute('min');
+      input.removeAttribute('max');
+      delete input.dataset.fyClamped;
+    }
+  });
+}
+
+function formatDateDMY(iso) {
+  if (!iso) return '';
+  const [y, m, d] = String(iso).slice(0, 10).split('-');
+  return `${d}/${m}/${y}`;
+}
+
+// Returns true if the date string is within the active FY (inclusive). If no FY
+// is configured we return true so we don't block entry in pre-FY setup.
+function isDateInFY(iso) {
+  const b = state.fyBounds;
+  if (!b || !b.from || !b.to || !iso) return true;
+  return iso >= b.from && iso <= b.to;
+}
+
+function showFYBoundsToast() {
+  const b = state.fyBounds;
+  if (!b || !b.from || !b.to) return;
+  showToast(`Date is outside your active financial year (${b.label}: ${formatDateDMY(b.from)} → ${formatDateDMY(b.to)}). Pick a date inside this range.`, 'error');
+}
+
+// Global listener: any out-of-range value on a clamped date input is rejected.
+// We don't silently clamp — we toast and clear so the user knows why.
+document.addEventListener('change', (e) => {
+  const el = e.target;
+  if (el.tagName !== 'INPUT' || el.type !== 'date') return;
+  if (!el.dataset.fyClamped) return;
+  const val = el.value;
+  if (!val) return;
+  if (!isDateInFY(val)) {
+    showFYBoundsToast();
+    el.classList.add('error');
+    el.value = '';
+    setTimeout(() => el.classList.remove('error'), 2000);
+  }
+}, true);
+
+// Re-apply bounds every time the page changes (new date inputs may have appeared).
+// Wrap navigateTo so every page switch reapplies after the DOM settles.
+let _wrappedNavigate = false;
+function installFYBoundsNavHook() {
+  if (_wrappedNavigate || typeof navigateTo !== 'function') return;
+  const original = navigateTo;
+  window.navigateTo = function (page) {
+    const r = original(page);
+    setTimeout(applyFYBoundsToInputs, 0);
+    return r;
+  };
+  _wrappedNavigate = true;
 }
 
 /* ── FY-change popup ──────────────────────────── */

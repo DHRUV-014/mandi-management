@@ -35,6 +35,8 @@ function showApp() {
   loadDashboard();
   checkDeviceSetup();
   connectLiveUpdates();
+  installFYBoundsNavHook();
+  refreshFYBounds();
 }
 
 function updateHeaderUser() {

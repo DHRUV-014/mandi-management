@@ -46,7 +46,8 @@ function initRatesModule() {
     fetchBtn.disabled = true;
     fetchBtn.textContent = 'Loading…';
 
-    const { ok, data } = await api('GET', `/api/rates/all-commodities?date=${date}`);
+    // Only commodities that actually arrived on this date should get rates.
+    const { ok, data } = await api('GET', `/api/rates/by-date?date=${date}`);
     fetchBtn.disabled = false;
     fetchBtn.innerHTML = '&#128269; Fetch Commodities';
 
@@ -59,33 +60,26 @@ function initRatesModule() {
       countBadge.textContent     = '0 commodities';
       arrivedBadge.style.display = 'none';
       noData.style.display       = '';
+      noData.textContent         = `No commodities arrived on ${formatDisplayDate(date)}. Rates can only be entered for commodities that came through the gate.`;
       tableWrap.style.display    = 'none';
       return;
     }
 
     noData.style.display    = 'none';
     tableWrap.style.display = '';
-    countBadge.textContent  = `${data.commodities.length} commodit${data.commodities.length !== 1 ? 'ies' : 'y'}`;
-
-    const arrivedSet = new Set(data.arrived || []);
-    const arrivedCount = data.commodities.filter(c => arrivedSet.has(c.id)).length;
-    if (arrivedCount > 0) {
-      arrivedBadge.textContent   = `${arrivedCount} arrived today`;
-      arrivedBadge.style.display = '';
-    } else {
-      arrivedBadge.style.display = 'none';
-    }
+    countBadge.textContent  = `${data.commodities.length} arrived commodit${data.commodities.length !== 1 ? 'ies' : 'y'}`;
+    arrivedBadge.textContent   = `${data.commodities.length} arrived`;
+    arrivedBadge.style.display = '';
 
     tbody.innerHTML = data.commodities.map((c, i) => {
       const existing = data.rates[c.id] !== undefined ? data.rates[c.id] : '';
       const saved    = data.rates[c.id] !== undefined;
-      const hasArrived = arrivedSet.has(c.id);
       return `<tr data-id="${c.id}">
         <td style="text-align:center;color:var(--text-muted)">${i + 1}</td>
         <td>
           <strong>${escapeHtml(c.commodity_name)}</strong>
           <span style="font-size:11px;color:var(--text-muted);margin-left:6px">${escapeHtml(c.short_name)}</span>
-          ${hasArrived ? '<span style="font-size:10px;background:#dcfce7;color:#16a34a;border-radius:4px;padding:1px 6px;margin-left:6px;font-weight:600">Arrived</span>' : ''}
+          <span style="font-size:10px;background:#dcfce7;color:#16a34a;border-radius:4px;padding:1px 6px;margin-left:6px;font-weight:600">Arrived</span>
         </td>
         <td>${escapeHtml(c.unit)}</td>
         <td>

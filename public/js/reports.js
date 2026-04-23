@@ -140,14 +140,17 @@ function initReportsModule() {
     document.getElementById('rpt-gp-count').textContent =
       `${data.items.length} item${data.items.length !== 1 ? 's' : ''}`;
 
-    tbody.innerHTML = data.items.map(it => `<tr>
-      <td>${rptFormatDate(it.date)}</td>
+    tbody.innerHTML = data.items.map(it => {
+      const dt = it.created_at ? `${rptFormatDate(it.created_at)} <span style="color:var(--text-muted);font-size:11px">${rptFormatTime(it.created_at)}</span>` : rptFormatDate(it.date);
+      return `<tr>
+      <td>${dt}</td>
       <td><span class="gp-number-badge">#${it.gate_pass_number}</span></td>
       <td>${escapeHtml(it.commodity_name)}</td>
       <td style="text-align:center"><strong>${it.number_of_bags}</strong></td>
-      <td style="text-align:center">${it.weight_per_bag > 0 ? it.weight_per_bag : '—'}</td>
+      <td style="text-align:center">${it.weight_per_bag != null && Number(it.weight_per_bag) > 0 ? rptFmtNum(it.weight_per_bag) : '—'}</td>
       <td>${escapeHtml(it.vehicle_number || '—')}</td>
-    </tr>`).join('');
+    </tr>`;
+    }).join('');
   });
 
   document.getElementById('rpt-gp-print').addEventListener('click', () => {
@@ -170,12 +173,9 @@ function initReportsModule() {
 
     if (!ok) { showToast('Failed to load report', 'error'); return; }
 
-    rptRenderSummary(document.getElementById('rpt-cm-summary'), [
-      { value: data.summary.total_commodities, label: 'Commodities' },
-      { value: rptFmtNum(data.summary.total_bags), label: 'Total Qty' },
-      { value: rptFmtNum(data.summary.total_weight), label: 'Total Weight (kg)' },
-      ...(data.summary.total_value != null ? [{ value: '₹' + rptFmtNum(data.summary.total_value), label: 'Total Value' }] : []),
-    ]);
+    // Top summary cards are hidden on this report by user preference.
+    const summaryEl = document.getElementById('rpt-cm-summary');
+    if (summaryEl) { summaryEl.innerHTML = ''; summaryEl.classList.add('hidden'); }
 
     const result = document.getElementById('rpt-cm-result');
     result.style.display = '';
@@ -183,7 +183,7 @@ function initReportsModule() {
 
     const tbody = document.getElementById('rpt-cm-tbody');
     if (data.commodities.length === 0) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="10">No data found in this date range</td></tr>';
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="8">No data found in this date range</td></tr>';
       return;
     }
 
@@ -192,21 +192,18 @@ function initReportsModule() {
         <td>${i + 1}</td>
         <td><strong>${escapeHtml(c.commodity_name)}</strong></td>
         <td><span class="ac-short-badge">${escapeHtml(c.short_name)}</span></td>
-        <td style="text-align:center">${escapeHtml(c.unit)}</td>
         <td style="text-align:center">${c.gate_pass_count}</td>
         <td style="text-align:center">${c.trader_count}</td>
         <td style="text-align:center"><strong>${rptFmtNum(c.total_bags)}</strong></td>
-        <td style="text-align:center"><strong>${rptFmtNum(c.total_weight)}</strong></td>
-        <td style="text-align:right">${c.avg_rate != null ? '₹' + rptFmtNum(c.avg_rate) : '<span style="color:var(--text-muted)">—</span>'}</td>
-        <td style="text-align:right;font-weight:600">${c.total_value != null ? '₹' + rptFmtNum(c.total_value) : '<span style="color:var(--text-muted)">—</span>'}</td>
+        <td style="text-align:center">${c.weight_per_bag != null && Number(c.weight_per_bag) > 0 ? rptFmtNum(c.weight_per_bag) : '—'}</td>
+        <td style="text-align:right"><strong>${rptFmtNum(c.total_weight)}</strong></td>
       </tr>
     `).join('') + `
       <tr class="rpt-total-row">
-        <td colspan="6" style="text-align:right">Grand Total</td>
-        <td style="text-align:center">${rptFmtNum(data.summary.total_bags)}</td>
-        <td style="text-align:center">${rptFmtNum(data.summary.total_weight)}</td>
+        <td colspan="5" style="text-align:right">Grand Total</td>
+        <td style="text-align:center"><strong>${rptFmtNum(data.summary.total_bags)}</strong></td>
         <td></td>
-        <td style="text-align:right">${data.summary.total_value != null ? '<strong>₹' + rptFmtNum(data.summary.total_value) + '</strong>' : '—'}</td>
+        <td style="text-align:right"><strong>${rptFmtNum(data.summary.total_weight)}</strong></td>
       </tr>`;
   });
 
@@ -248,25 +245,33 @@ function initReportsModule() {
     data.commodities.forEach(c => {
       // Commodity header row
       html += `<tr class="csw-commodity-row">
-        <td colspan="3"><strong>${escapeHtml(c.commodity_name)}</strong>${c.short_name ? ` <span style="color:var(--text-muted);font-size:11px">(${escapeHtml(c.short_name)})</span>` : ''}</td>
+        <td colspan="4"><strong>${escapeHtml(c.commodity_name)}</strong>${c.short_name ? ` <span style="color:var(--text-muted);font-size:11px">(${escapeHtml(c.short_name)})</span>` : ''}</td>
       </tr>`;
 
-      // One row per state
+      // One row per (state, weight_per_bag)
       c.states.forEach(s => {
         html += `<tr class="csw-state-row">
           <td style="padding-left:40px">${escapeHtml(s.state_name)}</td>
+          <td style="text-align:center"><strong>${rptFmtNum(s.total_bags)}</strong></td>
+          <td style="text-align:center">${s.weight_per_bag != null && Number(s.weight_per_bag) > 0 ? rptFmtNum(s.weight_per_bag) : '—'}</td>
           <td style="text-align:right"><strong>${rptFmtNum(s.total_weight)}</strong></td>
-          <td>${escapeHtml(s.unit || '')}</td>
         </tr>`;
       });
 
       // Total row per commodity
       html += `<tr class="csw-total-row">
-        <td style="padding-left:40px;font-weight:600">Total Qty</td>
+        <td colspan="3" style="padding-left:40px;font-weight:600;text-align:right">Total Weight</td>
         <td style="text-align:right;font-weight:700">${rptFmtNum(c.grand_total)}</td>
-        <td></td>
       </tr>`;
     });
+
+    // Grand total row across all commodities
+    if (data.overall_total != null) {
+      html += `<tr class="rpt-total-row">
+        <td colspan="3" style="text-align:right;font-weight:700">Grand Total (all commodities)</td>
+        <td style="text-align:right;font-weight:700">${rptFmtNum(data.overall_total)}</td>
+      </tr>`;
+    }
 
     tbody.innerHTML = html;
   });
@@ -385,12 +390,15 @@ function initReportsModule() {
       let shopTotalQty = 0;
       shop.entries.forEach(e => {
         shopTotalQty += Number(e.number_of_bags) || 0;
+        const dt = e.created_at
+          ? `${rptFormatDate(e.created_at)} <span style="color:var(--text-muted);font-size:11px">${rptFormatTime(e.created_at)}</span>`
+          : rptFormatDate(e.date);
         html += `<tr>
-          <td>${rptFormatDate(e.date)}</td>
+          <td>${dt}</td>
           <td><span class="gp-number-badge">#${e.gate_pass_number}</span></td>
           <td>${escapeHtml(e.commodity_name)}</td>
           <td style="text-align:center"><strong>${e.number_of_bags}</strong></td>
-          <td style="text-align:center">${e.weight_per_bag > 0 ? e.weight_per_bag : '—'}</td>
+          <td style="text-align:center">${e.weight_per_bag != null && Number(e.weight_per_bag) > 0 ? rptFmtNum(e.weight_per_bag) : '—'}</td>
         </tr>`;
       });
 
@@ -454,6 +462,7 @@ function initReportsModule() {
       ).join('');
 
     const container = document.getElementById('rpt-ld-result');
+    container.style.display = '';
 
     if (!data.ledger || data.ledger.length === 0) {
       container.innerHTML = `<div class="card"><p style="padding:24px;color:var(--text-muted);text-align:center;font-style:italic">No data found for this period.</p></div>`;
@@ -514,18 +523,23 @@ function initReportsModule() {
     // Trader detail cards
     const traderCards = data.ledger.map(trader => {
       const allRows = trader.dates.map(day =>
-        day.items.map(item => `
+        day.items.map(item => {
+          const dt = item.created_at
+            ? `${rptFormatDate(item.created_at)} <span style="color:var(--text-muted);font-size:11px">${rptFormatTime(item.created_at)}</span>`
+            : rptFormatDate(day.date);
+          return `
           <tr>
-            <td>${rptFormatDate(day.date)}</td>
+            <td>${dt}</td>
             <td><span class="gp-number-badge" style="font-size:11px">#${item.gate_pass_number}</span></td>
             <td>${escapeHtml(item.vehicle_number)}</td>
             <td>${escapeHtml(item.commodity_name)}</td>
             <td style="text-align:center">${item.number_of_bags}</td>
-            <td style="text-align:center">${item.weight_per_bag > 0 ? item.weight_per_bag : '—'}</td>
+            <td style="text-align:center">${item.weight_per_bag != null && Number(item.weight_per_bag) > 0 ? rptFmtNum(item.weight_per_bag) : '—'}</td>
             <td style="text-align:right">${item.rate != null ? '₹' + rptFmtNum(item.rate) : '<span style="color:var(--text-muted)">—</span>'}</td>
             <td style="text-align:right;font-weight:600">${item.value != null ? '₹' + rptFmtNum(item.value) : '<span style="color:var(--text-muted)">—</span>'}</td>
             <td style="text-align:right;color:var(--primary);font-weight:600">${item.fee != null ? '₹' + rptFmtNum(item.fee) : '<span style="color:var(--text-muted)">—</span>'}</td>
-          </tr>`).join('')
+          </tr>`;
+        }).join('')
       ).join('');
 
       return `
@@ -541,7 +555,7 @@ function initReportsModule() {
             <table class="data-table ledger-table" id="ledger-${trader.trader_id}">
               <thead>
                 <tr>
-                  <th style="width:85px">Date</th>
+                  <th style="width:130px">Date &amp; Time</th>
                   <th style="width:85px">Gate Pass</th>
                   <th style="width:95px">Vehicle No</th>
                   <th>Commodity</th>

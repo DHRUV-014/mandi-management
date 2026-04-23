@@ -55,7 +55,7 @@ function renderSuperadminDashboard(data) {
       : `<span class="db-chip db-chip-warn" onclick="navigateTo('user-management')">⚠ No Users Yet</span>`;
 
     return `
-      <div class="db-mandi-card ${allDone ? '' : 'db-mandi-card-warn'}">
+      <div class="db-mandi-card ${allDone ? '' : 'db-mandi-card-warn'}" data-mandi-id="${m.id}">
         <div class="db-mandi-card-left">
           <div class="db-mandi-name">
             ${escapeHtml(m.name)}
@@ -72,9 +72,72 @@ function renderSuperadminDashboard(data) {
           ${fyChip}
           ${userChip}
         </div>
-        <button class="btn btn-sm btn-ghost" onclick="navigateTo('mandi-management')" style="flex-shrink:0">Manage →</button>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn btn-sm btn-ghost" onclick="dbToggleFYHistory(${m.id})">📂 Past FYs</button>
+          <button class="btn btn-sm btn-ghost" onclick="navigateTo('mandi-management')">Manage →</button>
+        </div>
+      </div>
+      <div class="db-fy-history hidden" id="db-fy-hist-${m.id}" style="margin:-4px 0 14px;padding:12px 16px;background:#f8fafc;border:1px solid var(--border);border-radius:8px">
+        Loading financial years…
       </div>`;
   }).join('');
+}
+
+/* ── Past-FY viewer (superadmin dashboard) ──────────── */
+
+async function dbToggleFYHistory(mandiId) {
+  const panel = document.getElementById(`db-fy-hist-${mandiId}`);
+  if (!panel) return;
+  const isOpen = !panel.classList.contains('hidden');
+  if (isOpen) { panel.classList.add('hidden'); return; }
+  panel.classList.remove('hidden');
+  panel.innerHTML = 'Loading financial years…';
+
+  const { ok, data } = await api('GET', `/api/mandis/${mandiId}/financial-years`);
+  if (!ok) { panel.innerHTML = '<span style="color:var(--danger)">Failed to load FYs</span>'; return; }
+
+  if (!data.financial_years.length) {
+    panel.innerHTML = `<div style="color:var(--text-muted);font-size:13px">No financial years created yet. Go to <a href="#" onclick="navigateTo('mandi-management')" style="color:var(--primary)">Mandi Management</a> to create one.</div>`;
+    return;
+  }
+
+  const rows = data.financial_years.map(fy => {
+    const isActive = fy.code === data.active_fy;
+    const from = fy.from_date ? String(fy.from_date).slice(0, 10) : null;
+    const to   = fy.to_date   ? String(fy.to_date).slice(0, 10)   : null;
+    const range = (from && to) ? `${formatDateDMY(from)} → ${formatDateDMY(to)}` : '<span style="color:var(--text-muted)">no dates</span>';
+    return `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#fff;border:1px solid var(--border);border-radius:6px;margin-bottom:6px">
+        <div style="flex:1;font-size:13px">
+          <strong>${escapeHtml(fy.fy_label || fy.code)}</strong>
+          ${isActive ? '<span style="margin-left:6px;background:#dcfce7;color:#166534;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">✔ ACTIVE</span>' : ''}
+          <span style="margin-left:8px;color:var(--text-muted);font-size:12px">${range}</span>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="dbOpenFYData(${mandiId}, '${escapeHtml(fy.code)}', '${escapeHtml(fy.fy_label || fy.code)}')">View Data</button>
+      </div>`;
+  }).join('');
+
+  panel.innerHTML = `
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">All financial years for this mandi — click <strong>View Data</strong> to browse reports, gate passes and rates from that FY.</div>
+    ${rows}`;
+}
+
+async function dbOpenFYData(mandiId, fyCode, fyLabel) {
+  // 1. Make this mandi the active context
+  let r = await api('POST', '/api/auth/switch-mandi', { mandi_id: mandiId });
+  if (!r.ok) { showToast('Failed to switch mandi', 'error'); return; }
+  state.user.current_mandi_id = mandiId;
+  notifyLiveMandiChange(mandiId);
+
+  // 2. Set the viewing FY for this session
+  r = await api('POST', '/api/fy/select', { code: fyCode });
+  if (!r.ok) { showToast(r.data?.error || 'Failed to switch FY', 'error'); return; }
+
+  showToast(`Viewing data for ${fyLabel}`, 'info');
+
+  // 3. Reload full context and land on Gate Pass page (most useful starting point)
+  await reloadCurrentContext();
+  navigateTo('gate-pass');
 }
 
 function renderUserDashboard(data) {

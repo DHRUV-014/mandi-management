@@ -240,6 +240,7 @@ async function mmDeleteMandi(id, name) {
   if (ok) {
     showToast(data.message || `Mandi "${name}" deleted`, 'success');
     loadMandiManagement();
+    refreshMandiListEverywhere();
   } else {
     showToast(data.error || 'Failed to delete mandi', 'error');
   }
@@ -368,6 +369,7 @@ function initMandiManagementModule() {
       document.getElementById('mm-add-card').style.display = 'none';
       showToast(`Mandi "${data.name}" added. Open Financial Years to create a new FY.`, 'success');
       loadMandiManagement();
+      refreshMandiListEverywhere();
     } else {
       errDiv.textContent = data.error || 'Failed to add mandi';
       errDiv.classList.remove('hidden');
@@ -405,6 +407,7 @@ function initMandiManagementModule() {
       document.getElementById('mm-edit-card').style.display = 'none';
       showToast('Mandi updated successfully', 'success');
       loadMandiManagement();
+      refreshMandiListEverywhere();
     } else {
       errDiv.textContent = data.error || 'Failed to update mandi';
       errDiv.classList.remove('hidden');

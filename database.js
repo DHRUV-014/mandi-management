@@ -10,6 +10,9 @@ const BASE_CONFIG = {
   waitForConnections: true,
   connectionLimit:    10,
   charset:            'utf8mb4',
+  // DECIMAL / SUM() results must be numbers, not strings, otherwise reduce((s,c) => s + c.val)
+  // string-concatenates and every grand total in the app comes out wrong.
+  decimalNumbers:     true,
 };
 
 const MAIN_DB = process.env.MYSQL_MAIN_DB || 'mandi_main';

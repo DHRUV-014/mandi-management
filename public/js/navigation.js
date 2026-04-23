@@ -142,14 +142,22 @@ async function updateContextFYBadge() {
   if (!mandiId) { badge.textContent = ''; badge.classList.add('hidden'); return; }
 
   const { ok, data } = await api('GET', `/api/fy/list`);
-  if (ok && data.active_fy) {
-    const fy = data.financial_years.find(f => f.code === data.active_fy);
+  if (ok) {
+    const effectiveCode = data.selected_fy || data.active_fy;
+    const fy = data.financial_years.find(f => f.code === effectiveCode);
     if (fy?.fy_label) {
-      badge.textContent = `FY ${fy.fy_label}`;
+      const viewingPast = data.selected_fy && data.selected_fy !== data.active_fy;
+      badge.textContent = viewingPast ? `📂 Viewing FY ${fy.fy_label}` : `FY ${fy.fy_label}`;
       badge.classList.remove('hidden');
-      badge.style.background = '';
-      badge.style.color = '';
-      badge.style.borderColor = '';
+      if (viewingPast) {
+        badge.style.background   = '#fef3c7';
+        badge.style.color        = '#92400e';
+        badge.style.borderColor  = '#fde68a';
+      } else {
+        badge.style.background   = '';
+        badge.style.color        = '';
+        badge.style.borderColor  = '';
+      }
       return;
     }
   }
